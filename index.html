@@ -76,7 +76,7 @@
         </svg>
         </div>
         <details class="sliders-section" open>
-            <summary>Noise</summary>
+            <summary>Settings</summary>
             <div class="control-group">
                 <label>Resolution X</label>
                 <div class="input-row">
@@ -91,6 +91,31 @@
                     <input type="number" id="resY_num" min="12" max="2000" value="600">
                 </div>
             </div>
+            <div class="control-group">
+                <label>Zoom</label>
+                <div class="input-row">
+                    <input type="range" id="canvasZoom" min="10" max="1000" value="100">
+                    <input type="number" id="canvasZoom_num" min="10" max="1000" value="100">%
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Menu Brightness</label>
+                <div class="input-row">
+                    <input type="range" id="menuBrightness" min="0" max="100" value="10">
+                    <input type="number" id="menuBrightness_num" min="0" max="100" value="10">
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 10px;">
+                <div class="input-row" style="justify-content: center; flex-wrap: wrap;">
+                    <label for="invert">Invert</label>
+                    <input type="checkbox" id="invert">
+                    <button id="btn-randomize">Randomize</button>
+                    <button id="btn-download">Download</button>
+                </div>
+            </div>
+        </details>
+        <details class="sliders-section" open>
+            <summary>Perlin Noise</summary>
             <div class="control-group">
                 <label>Scale</label>
                 <div class="input-row">
@@ -113,13 +138,6 @@
                 </div>
             </div>
             <div class="control-group">
-                <label>Pixelation</label>
-                <div class="input-row">
-                    <input type="range" id="pixelation" min="1" max="10" value="1">
-                    <input type="number" id="pixelation_num" min="1" max="10" value="1">
-                </div>
-            </div>
-            <div class="control-group">
                 <label>Power</label>
                 <div class="input-row">
                     <input type="range" id="power" min="0.1" max="5" value="1" step="0.1">
@@ -127,10 +145,10 @@
                 </div>
             </div>
             <div class="control-group">
-                <label>Zoom</label>
+                <label>Pixelation</label>
                 <div class="input-row">
-                    <input type="range" id="canvasZoom" min="10" max="1000" value="100">
-                    <input type="number" id="canvasZoom_num" min="10" max="1000" value="100">%
+                    <input type="range" id="pixelation" min="1" max="10" value="1">
+                    <input type="number" id="pixelation_num" min="1" max="10" value="1">
                 </div>
             </div>
             <div class="control-group">
@@ -138,14 +156,6 @@
                 <div class="input-row">
                     <input type="range" id="seed" min="0" max="99999" value="12345">
                     <input type="number" id="seed_num" min="0" max="99999" value="12345">
-                </div>
-            </div>
-            <div class="control-group" style="margin-top: 10px;">
-                <div class="input-row" style="justify-content: center; flex-wrap: wrap;">
-                    <label for="invert">Invert</label>
-                    <input type="checkbox" id="invert">
-                    <button id="btn-randomize">Randomize</button>
-                    <button id="btn-download">Download</button>
                 </div>
             </div>
         </details>
@@ -165,14 +175,6 @@
                     <button id="btn-add-color">Add Color</button>
                     <button id="btn-remove-color">Remove Color</button>
                 </div>
-                <div class="control-group">
-                    <label>Brightness</label>
-                    <div class="input-row">
-                        <input type="range" id="menuBrightness" min="0" max="100" value="10">
-                        <input type="number" id="menuBrightness_num" min="0" max="100" value="10">
-                    </div>
-                </div>
-
 </details>
         <details class="color-inputs shapes-section">
             <summary>Minerals</summary>
@@ -242,16 +244,16 @@
                 </div>
             </div>
             <div class="control-group">
-                <label>Color</label>
-                <div class="input-row" style="justify-content: center;">
-                    <input type="color" id="shapeColor" value="#88ccff">
-                </div>
-            </div>
-            <div class="control-group">
                 <label>Area</label>
                 <div class="input-row">
                     <input type="range" id="shapeArea" min="1" max="100" value="100">
                     <input type="number" id="shapeArea_num" min="1" max="100" value="100">%
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Color</label>
+                <div class="input-row" style="justify-content: center;">
+                    <input type="color" id="shapeColor" value="#88ccff">
                 </div>
             </div>
             <div class="control-group" style="margin-top: 6px;">
