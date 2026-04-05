@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perlynx</title>
+    <link rel="icon" id="favicon" type="image/png">
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #1a1a1a; color: black; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         h1 { -webkit-background-clip: text; background-clip: text; color: transparent; background-size: cover; }
@@ -801,6 +802,22 @@ function generate() {
         document.querySelector('h1').style.backgroundImage = `url(${dataURL})`;
         const fillImg = document.getElementById('perlin-fill-img');
         if (fillImg) fillImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
+
+        // Update favicon with perlin-filled logo
+        const svgStr = new XMLSerializer().serializeToString(_el('perlynx-logo'));
+        const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(svgBlob);
+        const favImg = new Image();
+        favImg.onload = () => {
+            if (!generate._favCanvas) { generate._favCanvas = document.createElement('canvas'); generate._favCanvas.width = 32; generate._favCanvas.height = 32; }
+            const fctx = generate._favCanvas.getContext('2d');
+            fctx.clearRect(0, 0, 32, 32);
+            fctx.drawImage(favImg, 0, 0, 32, 32);
+            URL.revokeObjectURL(blobUrl);
+            _el('favicon').href = generate._favCanvas.toDataURL('image/png');
+        };
+        favImg.src = blobUrl;
+
         _allButtons().forEach(btn => {
             btn.style.backgroundImage = `url(${dataURL})`;
             btn.style.color = contrast;
