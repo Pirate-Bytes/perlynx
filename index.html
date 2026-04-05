@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perlynx</title>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #1a1a1a; color: black; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { -webkit-background-clip: text; background-clip: text; color: transparent; background-size: cover; }
+        .controls { position: fixed; top: 20px; left: 20px; z-index: 10; background: #f7f7f7; padding: 10px; border-radius: 12px; width: 260px; min-width: 180px; max-height: calc(100vh - 40px); display: grid; grid-template-columns: 1fr; gap: 8px; color: black; overflow: auto; transition: border-radius 0.25s, padding 0.25s, width 0.25s; resize: both; }
+        .sliders-section { margin-bottom: 10px; }
+        .sliders-section[open] { border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+        .colors-section { background: #e7e7e7; padding: 10px; border-radius: 8px; }
+        .shapes-section { background: #e7e7e7; padding: 10px; border-radius: 8px; }
+        .controls summary { cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 2px 0; user-select: none; list-style: none; }
+        .controls summary::-webkit-details-marker { display: none; }
+        .controls summary::before { content: ''; display: inline-block; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; border-bottom: none; margin-right: 4px; vertical-align: middle; }
+        .controls details:not([open]) > summary::before { border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; border-right: none; }
+        .controls details { display: grid; gap: 8px; }
+        .shapes-section select { flex: 1; background: #e7e7e7; border: 1px solid #bbb; border-radius: 4px; padding: 2px; font-size: 11px; }
+        label { font-size: 12px; margin-bottom: 5px; color: black; text-transform: uppercase; letter-spacing: 1px; }
+        .control-group { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .color-inputs { display: flex; flex-direction: column; gap: 10px; }
+        .color-buttons { display: flex; gap: 10px; justify-content: center; }
+        #colorContainer { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        #colorContainer .control-group { align-items: center; width: auto; flex: 0 0 auto; }
+        #colorContainer .control-group label { font-size: 10px; user-select: text; cursor: text; }
+        .input-row { display: flex; gap: 6px; align-items: center; width: 100%; box-sizing: border-box; }
+        .input-row input[type="range"] { flex: 1; min-width: 60px; background: transparent; }
+        .input-row input[type="number"],
+        .input-row input[type="color"],
+        .input-row input[type="checkbox"] { width: 44px; flex-shrink: 0; background: #e7e7e7; border: 1px solid #bbb; color: black; }
+        .input-row input[type="checkbox"] { width: auto; }
+        input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 4px; background: #bbb; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--thumb-color, black); margin-top: -4px; }
+        input[type="range"]::-moz-range-track { height: 6px; border-radius: 4px; background: #bbb; }
+        input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--thumb-color, black); }
+        button { padding: 6px 10px; border: none; border-radius: 6px; color: black; font-weight: bold; cursor: pointer; transition: 0.2s; background-size: cover; background-position: center; font-size: 11px; }
+        button:hover { opacity: 0.9; }
+        #menu-toggle { position: absolute; right: 6px; top: 6px; transform: none; padding: 0 !important; width: 22px; height: 22px; font-size: 16px; background: transparent !important; background-image: none !important; border-radius: 50% !important; display: flex; align-items: center; justify-content: center; opacity: 0.4; color: inherit; }
+        #menu-toggle:hover { opacity: 1 !important; }
+        .controls.collapsed { width: 80px !important; height: 80px !important; min-width: unset !important; border-radius: 12px !important; padding: 0 !important; gap: 0 !important; overflow: hidden !important; cursor: pointer !important; resize: none; }
+        .controls.collapsed > *:not(#main-header) { display: none !important; }
+        .controls.collapsed #main-header { padding: 0 !important; margin: 0 !important; border-bottom: none !important; justify-content: center; }
+        .controls.collapsed h1, .controls.collapsed #menu-toggle { display: none; }
+        canvas { background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <noscript><p style="color:white;text-align:center">JavaScript is required to run Perlynx.</p></noscript>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+        <div id="main-header" style="display: flex; align-items: center; gap: 4px; justify-content: center; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+            <h1 style="margin: 0;">Perlynx</h1>
+        <button id="menu-toggle" title="Collapse menu">&#x2228;</button>
+        <svg id="perlynx-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="80" height="80" style="flex-shrink: 0;">
+            <defs>
+                <pattern id="perlin-fill" patternUnits="objectBoundingBox" width="1" height="1">
+                    <image id="perlin-fill-img" width="2048" height="2048" preserveAspectRatio="xMidYMid slice"/>
+                </pattern>
+            </defs>
+            <g fill="url(#perlin-fill)">
+                <path d="M 382.035 274.794 C 385.021 277.783 396.486 305.385 399.778 311.508 C 408.372 327.496 458.095 406.617 469.444 412.529 C 469.945 408.281 463.678 401.96 462.478 396.935 C 457.306 375.272 451.3 360.875 449.514 338.263 C 474.633 383.717 507.855 429.851 540.94 469.993 C 580.871 518.441 643.85 563.467 699.852 591.535 C 770.725 627.055 840.382 652.396 905.361 699.261 C 897.271 690.683 889.019 681.412 879.881 674.01 C 874.202 669.41 868.579 667.602 863.25 662.661 C 870.481 657.895 894.556 656 904.704 654.336 C 993.7 639.746 1080.33 642.202 1168.81 658.801 C 1172.36 659.469 1176.19 659.787 1178.27 662.741 C 1173.2 667.205 1146.39 689.74 1146.43 695.309 C 1150.33 693.608 1164.63 681.96 1170.08 678.453 C 1222.16 644.955 1279.47 624.255 1334.71 597.011 C 1414.2 557.798 1485.99 502.707 1536.95 429.477 C 1557.93 399.315 1578.34 368.466 1599.08 337.994 C 1592.91 366.908 1589.14 390.057 1574.3 416.517 C 1608.82 378.644 1642.9 317.705 1666.63 272.43 C 1658.12 326.129 1648.33 371.188 1616.67 417.42 C 1636.72 398.903 1650.05 384.842 1667.29 363.356 C 1653.49 410.552 1631.71 445.332 1598.33 481.054 C 1589.43 490.578 1580.18 501.087 1569.42 508.606 C 1571.57 523.717 1572.77 541.829 1573.51 557.028 C 1577.21 627.593 1566.59 698.175 1542.32 764.535 C 1530.35 797.929 1522.9 818.37 1498.35 845.449 C 1503.22 834.151 1506.1 818.24 1510.06 806.046 C 1516.6 785.902 1523.73 765.409 1529.28 745.052 C 1544.98 687.437 1551.37 629.169 1549.65 569.541 C 1549.22 554.547 1548.24 521.399 1543.93 507.933 C 1494.78 542.974 1453.18 578.999 1413.41 624.7 C 1374.1 669.875 1347.62 720.258 1310.01 765.904 C 1310.5 765.311 1306.82 768.403 1306.34 768.921 C 1307.3 770.897 1330.69 783.855 1334.58 786.379 C 1382.28 817.35 1450.4 880.09 1467.09 935.135 C 1457.78 924.634 1411 888.471 1397.41 886.497 L 1396.67 887.165 C 1403.03 890.438 1412.25 903.43 1418.93 909.01 C 1444.6 930.484 1468.92 958.596 1494.53 979.413 C 1493.33 973.604 1492.75 967.311 1492.17 961.375 C 1489.33 932.47 1477.94 907.458 1468.73 880.203 C 1535.37 942.763 1574.63 1053.86 1586.77 1142.8 C 1549.86 1081.83 1488.87 1014.06 1428.7 976.567 C 1439.13 987.207 1448.75 1000.8 1458.54 1012.16 C 1527.38 1091.98 1580.05 1215.19 1547.55 1322.09 C 1547.05 1317.38 1546.44 1312.68 1545.7 1307.99 C 1534.86 1237.91 1506.1 1181.91 1462.41 1126.25 C 1452.8 1114.01 1442.48 1101.51 1429.94 1092.32 C 1440.05 1106.23 1458.5 1146.45 1464.94 1163.24 C 1501.11 1257.47 1501.3 1359.9 1462.72 1452.8 C 1445.19 1403.09 1429.45 1373.15 1390.5 1336.33 C 1398.46 1365.65 1403.73 1394.17 1403.49 1424.73 C 1403.35 1441.52 1401.42 1459.98 1401.98 1476.52 L 1402.04 1478.27 C 1378.45 1421.87 1341.61 1371.99 1294.64 1332.84 C 1308.5 1337.05 1323.35 1340.26 1337.08 1344.98 C 1345.36 1347.83 1354.99 1352.75 1363.1 1356.55 C 1342.99 1318.65 1335.4 1309.83 1306.98 1278.27 C 1333.92 1279.82 1373.24 1288.25 1395.78 1304.13 C 1380.17 1281.55 1355.41 1263.55 1331.47 1250.93 C 1327.36 1249.05 1323.2 1247.29 1319 1245.63 C 1273.28 1227.91 1217.85 1236.88 1173.96 1256.22 C 1194.22 1253.14 1225.12 1250.05 1244.99 1251.41 C 1218.37 1275.43 1212.5 1279.53 1177.55 1287.8 C 1195.89 1288.52 1213.24 1284.88 1233.18 1287.5 C 1245.47 1289.12 1262.41 1295.18 1272.38 1295.77 C 1266.14 1289.35 1256.73 1281.46 1249.81 1275.58 C 1292.21 1282.75 1311.29 1306.05 1337.53 1336.03 C 1322.33 1334.11 1318.42 1329.98 1304.93 1324.34 C 1275.98 1312.25 1241.41 1296.53 1209.36 1303.18 C 1186.89 1307.84 1168.38 1324.54 1145.61 1328.8 C 1111.04 1336.07 1071.97 1322.17 1042.34 1305.05 C 1034.72 1300.65 1022.86 1290.03 1032 1281.22 C 1052.53 1261.42 1081.46 1249.66 1100.51 1228.23 C 1110 1217.56 1114.44 1192.18 1112.71 1178.33 C 1109.24 1183.57 1108.72 1202.46 1102.41 1208.37 C 1099.25 1208.44 1092.32 1205.3 1089.78 1203.99 C 1066.99 1190.95 1046.56 1207.79 1024.46 1208.63 C 1008.06 1209.26 987.113 1196 969.049 1200.25 C 965.383 1201.11 945.89 1210.34 944.395 1208.92 C 937.821 1202.67 934.802 1185.07 932.602 1176.17 C 931.459 1186.53 932.531 1190.38 933.643 1200.29 C 937.394 1239.28 976.036 1251.8 1002.47 1273.24 C 1008.87 1278.43 1018.76 1286.95 1012.06 1295.96 C 1004.89 1305.6 986.888 1312.98 975.952 1317.19 C 949.716 1327.28 920.374 1337.41 892.632 1327.08 C 867.533 1317.66 845.198 1299.05 817.005 1301.21 C 779.908 1304.05 743.961 1330.43 708.78 1337.29 C 736.738 1305.52 753.311 1280.9 799.519 1276.16 C 792.081 1280.81 782.385 1291.15 775.669 1297.57 C 799.993 1288.06 814.952 1286.14 841.459 1286.67 C 848.101 1286.8 856.77 1288.36 862.832 1287.7 C 860.397 1285.27 851.797 1284.61 847.27 1282.88 C 827.007 1275.14 815.513 1266.56 802.513 1249.72 C 829.717 1253.31 844.706 1250.88 873.876 1258.2 C 824.474 1227.27 748.283 1229.52 700.744 1261.34 C 682.515 1273.54 668.606 1282.68 656.678 1301.15 C 678.592 1286.78 714.701 1278.54 740.94 1278.33 C 731.55 1289.54 721.352 1298.72 711.958 1310.47 C 699.344 1326.25 691.585 1342.77 681.955 1360.44 C 689.546 1356.63 697.113 1351.27 704.73 1347.29 C 718.954 1339.85 734.873 1337.15 750.541 1334.88 C 742.984 1342.09 734.025 1349 726.801 1356.32 C 697.5 1386.01 660.352 1437.02 646.912 1476.11 C 640.993 1440.87 643.142 1371.01 656.67 1337.8 C 615.543 1380.48 603.107 1397.35 584.953 1454.74 C 576.687 1439.59 569.057 1406.66 565.262 1389.45 C 548.847 1315.02 558.76 1231.25 585.552 1160.42 C 594.663 1136.34 603.205 1116.16 617.613 1094.31 C 568.59 1140.6 540.42 1196.45 518.221 1258.94 C 513.453 1272.36 510.327 1305.54 505.711 1314.6 C 502.677 1310.96 501.515 1303.43 500.821 1298.73 C 486.78 1203.67 515.876 1112.97 571.208 1035.78 C 579.188 1024.64 587.477 1013.24 595.964 1002.44 C 602.103 994.628 609.145 987.226 615.034 979.216 L 615.679 978.327 C 562.784 1009.79 517.728 1061.64 482.92 1111.91 C 474.386 1124.24 466.812 1134.28 461.353 1148.32 C 463.583 1139.14 464.258 1129.64 466.021 1120.33 C 482.822 1031.69 511.034 945.702 576.871 881.075 C 575.017 890.856 572.593 897.637 569.163 906.952 C 560.794 929.682 553.003 957.121 551.48 981.239 C 559.925 975.675 566.106 967.91 573.249 960.706 L 616.321 917.361 C 627.52 905.952 639.727 895.281 651.172 883.673 C 629.046 897.144 605.378 910.155 585.88 927.206 C 584.724 928.216 583.456 928.3 582.032 928.428 C 579.015 907.751 658.385 826.679 676.78 811.13 C 696.536 794.433 719.872 780.323 742.383 768.154 C 723.76 753.026 703.943 716.03 689.742 695.668 C 672.758 671.315 656.56 647.86 636.836 625.422 C 611.452 596.049 583.604 568.9 553.595 544.27 C 539.486 532.711 515.132 516.3 503.563 504.371 C 493.102 602.313 500.746 687.114 528.308 781.581 C 534.41 802.496 546.291 828.914 550.494 848.202 L 550.889 850.087 C 543.09 839.407 533.983 827.444 527.499 815.781 C 485.158 739.624 471.013 638.462 472.951 552.083 C 473.187 541.558 474.647 517.945 477.217 508.61 C 443.214 478.479 408.051 439.649 390.074 397.861 C 385.609 387.481 381.779 374.833 378.079 363.965 C 394.394 380.592 413.575 411.387 433.971 422.989 C 409.017 390.618 393.304 347.621 385.824 307.79 C 384.19 299.087 381.43 283.522 382.035 274.794 z M 1295.88 983.464 C 1321.69 971.193 1333.84 970.437 1359.65 964.739 C 1346.31 963.463 1319.08 963.708 1305.44 964.409 C 1222.85 970.402 1142.91 998.69 1111.32 1083.56 C 1109.79 1087.67 1108.9 1095.9 1108.2 1100.44 L 1108.56 1101.43 L 1109.56 1100.12 C 1131.52 1071.75 1156.22 1063.43 1190.31 1068.99 C 1210.76 1072.32 1235.55 1066.81 1253.9 1057.1 C 1263.15 1051.64 1270.6 1047.03 1278.08 1039.44 C 1298.49 1018.71 1306.79 1004.75 1339.51 1013.71 C 1357.46 1018.63 1381.03 1026.73 1397.63 1035.51 C 1403.05 1038.38 1403.28 1040.11 1409.74 1040.63 C 1408.69 1039.02 1398.03 1031.8 1395.4 1029.8 C 1376.09 1015.17 1352.68 1002.94 1329.88 994.56 C 1318.83 990.495 1306.78 988.213 1295.88 983.464 z M 749.123 982.415 C 730.043 985.971 652.397 1023.46 643.734 1038.4 L 644.162 1039.44 C 648.745 1037.99 647.319 1038.03 650.929 1036 C 672.82 1023.7 710.31 1008.81 735.557 1011.7 C 753.451 1013.74 763.386 1031.44 774.408 1041.37 C 797.514 1062.19 819.98 1068.77 849.962 1068.94 C 860.152 1068.51 870.59 1066.69 880.652 1067.99 C 907.687 1071.48 926.645 1089.09 942.184 1109.84 C 924.376 1055.68 910.861 1021.49 856.929 993.581 C 808.591 968.571 742.564 959.452 688.14 964.591 L 689.963 965.095 C 712.361 971.145 725.903 973.078 749.123 982.415 z M 738.824 1185.39 C 696.755 1192.6 665.863 1207.33 635.161 1238.01 C 637.467 1223.74 641.202 1218.96 648.061 1206.45 C 619.2 1231.32 602.502 1267.72 594.978 1304.31 C 616.285 1277.99 662.106 1230.73 692.416 1218.05 C 718.378 1206.48 734.635 1201.98 763.6 1203.01 C 755.292 1207.05 727.233 1220.17 721.622 1224.75 L 721.861 1225.91 C 732.366 1226.24 742.866 1224.38 753.375 1224.11 C 768.635 1223.71 785.366 1224.85 800.577 1226.69 C 800.691 1220.24 800.073 1210.91 804.606 1206.07 C 819.015 1190.69 852.723 1213.13 867.857 1216.25 C 847.316 1200.83 835.59 1192.61 811.091 1185.13 C 826.085 1167.25 838.013 1165.4 858.883 1159.56 C 835.423 1159.06 817.852 1163.7 795.603 1170.88 C 769.079 1163.02 733.203 1153.13 705.234 1157.42 C 695.801 1158.19 671.38 1162.74 663.331 1166.72 L 662.174 1168.38 C 662.459 1168.47 681.715 1170.67 684.38 1171.07 C 703.541 1173.98 720.783 1178.09 738.824 1185.39 z M 888.633 865.718 C 897.318 884.426 906.157 911.188 913.18 930.824 C 922.741 957.554 926.337 985.398 942.253 1010.09 C 937.882 995.134 937.645 988.164 936.593 972.75 C 936.661 966.624 938.16 966.08 940.333 960.291 L 941.252 961.324 C 946.003 966.737 949.151 972.801 953.609 977.026 C 954.559 973.222 932.407 928.486 928.573 921.425 C 918.13 902.193 905.272 879.98 888.633 865.718 z M 1109.91 973.912 C 1109.57 981.825 1109.38 988.149 1108.28 995.964 C 1108.02 997.787 1107.78 999.614 1107.56 1001.44 C 1114.08 997.063 1137.11 909.421 1143.88 898.276 C 1143.75 898.491 1156.7 870.601 1157.48 868.595 L 1156.89 868.033 C 1133.83 889.992 1098.09 950.761 1091.84 981.405 C 1096 975.6 1101.52 963.51 1106.31 962.569 C 1109.18 965.112 1109.38 970.028 1109.91 973.912 z M 1184.82 776.546 C 1188.81 773.529 1193.81 769.515 1197.9 766.844 C 1202.22 763.781 1203.62 762.511 1208.61 760.676 L 1211.01 761.098 C 1212.39 764.528 1211.61 764.936 1210.99 769.25 L 1211.73 769.332 C 1224.52 756.112 1226.64 746.773 1243.9 734.704 C 1242.91 733.713 1243.46 733.922 1242.41 733.781 C 1216.43 746.11 1203.19 753.54 1184.82 776.546 z M 1285.9 1202.91 C 1322.95 1202.41 1344.75 1210.12 1375.63 1230.91 C 1393.89 1243.49 1407.83 1253.86 1423.59 1269.71 C 1433.13 1279.32 1442.28 1289.99 1451.91 1299.23 C 1441.5 1263.05 1429.68 1231.64 1400.44 1207.07 C 1405.48 1217.95 1409.61 1230.74 1415.2 1240.71 C 1380.93 1212.1 1353.85 1189.31 1306.02 1185.15 C 1331.18 1174.76 1365.53 1166.67 1392.69 1170.3 C 1371.89 1159.08 1335.45 1154.01 1312.66 1157.39 C 1300.61 1158.88 1287.38 1160.57 1275.74 1163.84 C 1267.48 1166.16 1260.39 1169.08 1251.89 1171.27 C 1229.57 1166.14 1219.29 1158.18 1193.18 1160.4 C 1216.21 1166.99 1221.86 1171.19 1241.99 1183.77 C 1221.67 1191.67 1195.48 1200.61 1180.74 1216.73 C 1193.61 1209.86 1205.58 1205.19 1219.82 1202.12 C 1244.87 1196.71 1244.92 1206.14 1248.88 1226.96 C 1268.61 1221.85 1312.8 1222.56 1332.09 1229.56 C 1314.64 1217.86 1303.42 1212.73 1285.9 1202.91 z M 852.178 771.18 L 854.634 771.547 C 842.152 752.886 822.603 737.795 801.123 731.009 C 810.47 738.969 818.577 746.598 826.364 756.111 C 828.761 759.039 830.153 764.137 832.934 765.987 L 836.34 760.037 C 841.541 762.577 847.66 767.461 852.178 771.18 z M 746.247 883.895 C 754.356 890.529 808.599 926.008 816.323 929.14 C 805.952 913.403 764.933 886.504 746.247 883.895 z M 1236.37 927.094 C 1257.87 912.556 1273.22 904.383 1295.72 887.703 C 1295.54 887.19 1295.35 886.678 1295.16 886.165 C 1268.47 898.647 1257.1 905.54 1235.67 925.782 C 1236.09 926.976 1235.75 926.621 1236.37 927.094 z"/>
+                <path d="M 1235.08 993.141 C 1249.5 992.693 1255.61 993.163 1269.54 996.373 C 1262.54 1043.88 1219.58 1075.78 1173.63 1053.72 C 1163.84 1048.52 1158.8 1045.85 1151.2 1037.85 C 1163.05 1031.48 1176.01 1019.17 1189.69 1015.91 C 1194.02 1024.34 1198.43 1046.23 1214.04 1033.67 C 1224.81 1025.01 1225.51 1008.22 1226.12 995.852 L 1235.08 993.141 z"/>
+                <path d="M 798.23 993.187 C 801.299 993.026 817.361 992.279 818.072 994.619 C 826.058 1020.9 832.489 1068.23 858.852 1015.31 C 872.506 1022.25 881.153 1028.29 893.545 1037.03 C 889.765 1041.69 888.262 1042.73 883.153 1045.88 C 857.895 1060.02 846.553 1065.52 817.435 1054.56 C 799.351 1047.75 789.335 1035.41 781.323 1018.3 C 779.027 1013.4 774.719 1003.96 776.546 998.956 C 781.011 996.091 792.505 994.353 798.23 993.187 z"/>
+                <path d="M 1015 1324.42 C 1044.55 1321.34 1080.74 1337.6 1111.29 1341.28 C 1132.52 1343.84 1148.62 1343.07 1169.82 1342.87 C 1162.28 1348.98 1158.2 1357.94 1152.68 1365.77 C 1137.83 1386.83 1119.88 1414.57 1097.38 1427.43 C 1099.93 1417.28 1103.4 1406.55 1106.46 1396.48 C 1089.69 1418.02 1049.36 1450.99 1020.98 1450.73 C 1000.31 1447.55 968.81 1427.28 953.996 1412.41 C 947.079 1405.47 941.419 1398.29 934.565 1391.45 C 939.022 1401.86 945.027 1414.55 948.152 1425.13 C 918.03 1407.98 893.994 1369.46 873.671 1342.75 C 893.097 1343.75 928.388 1344 946.719 1340 C 971.901 1334.5 988.143 1326.66 1015 1324.42 z"/>
+                <path d="M 526.627 538.582 C 530.23 541.176 551.201 570.319 555.471 575.654 L 660.275 705.04 C 667.165 713.644 696.5 752.372 701.48 756.491 C 683.664 752.902 639.018 729.83 625.11 718.097 C 646.554 751.109 652.292 761.236 681.86 787.581 C 657.427 786.356 632.966 779.169 610.713 769.273 C 632.362 793.779 629.41 788.078 654.715 804.35 C 649.277 811.425 641.204 817.648 634.732 825.593 C 629.662 830.697 622.137 841.949 616.279 848.492 C 598.74 833.832 579.419 810.138 571.153 788.439 C 582.333 791.852 594.207 794.257 604.77 797.769 C 587.946 783.247 566.581 756.843 554.999 737.813 C 552.406 733.554 541.67 715.448 542.784 711.011 C 558.904 717.972 575.425 729.118 590.825 736.824 C 591.668 735.529 581.879 724.29 580.111 721.659 C 557.77 688.404 527.244 645.222 526.818 604.199 C 541.018 624.14 548.026 630.462 568.215 645.039 C 564.407 637.869 558.311 631.608 553.802 624.295 C 537.426 597.737 524.406 570.369 526.627 538.582 z"/>
+                <path d="M 1524.62 538.886 C 1525.2 542.438 1522.83 552.186 1522 556.081 C 1515.35 587.026 1500.02 628.625 1476.01 649.866 C 1490.61 643.11 1511.16 618.005 1522.04 605.135 C 1519.05 638.435 1493.79 680.617 1474.72 707.998 C 1469.31 715.759 1460.5 723.175 1456.36 731.497 L 1456.86 732.489 C 1463.49 731.667 1495.06 713.753 1503.05 709.442 L 1504.27 710.305 C 1504.4 711.499 1504.54 713.413 1504.09 714.506 C 1493.58 739.966 1461.8 784.942 1439.55 798.949 C 1449.48 795.212 1461.61 791.707 1471.94 789.228 L 1473.07 790.251 C 1473.79 805.633 1440.65 838.102 1429.41 846.726 C 1424.23 840.291 1422.65 836.541 1416.35 830.279 C 1410.44 823.335 1399.12 812.272 1392.32 806.364 C 1398.05 801.492 1404.52 800.721 1410.09 796.273 C 1419.74 788.564 1426.1 780.175 1436.19 772.637 C 1428.52 776.227 1369.31 791.199 1363.23 786.511 C 1384.03 775.896 1404.36 745.261 1418.48 726.603 C 1419.91 724.702 1419.55 725.84 1420.57 723.288 C 1414.34 723.572 1378.45 746.764 1369.74 749.836 C 1366.64 750.927 1350.85 757.933 1349.81 758.016 C 1352.34 748.328 1373.62 723.65 1380.3 714.578 C 1420.01 660.652 1464.12 610.229 1506.5 558.466 C 1511.6 552.233 1518.49 543.769 1524.62 538.886 z"/>
+                <path d="M 1058.98 1220.18 C 1063.25 1219.93 1072.67 1219.01 1075.89 1220.86 C 1072.91 1226.37 1065.56 1236.31 1062.56 1242.42 C 1061.42 1244.75 1050.84 1254.47 1048.13 1257.41 C 1044.96 1260.54 1043.99 1261.42 1040.37 1263.97 L 1039.1 1263.45 C 1042.54 1245.64 1033.8 1225.66 1058.98 1220.18 z"/>
+                <path d="M 972.489 1219.38 C 993.955 1218.26 1004.36 1223.11 1004.88 1246.14 C 1005 1251.49 1006.68 1255.62 1005.86 1261.4 L 1004.48 1261.78 C 996.374 1255.29 970.001 1230.26 970.44 1220.31 L 972.489 1219.38 z"/>
+                <path fill-opacity="0.25" d="M 801.432 1243.47 C 807.585 1241.97 822.187 1243.88 827.963 1246.79 C 823.489 1247.12 805.444 1245.46 801.432 1243.47 z"/>
+            </g>
+        </svg>
+        </div>
+        <details class="sliders-section" open>
+            <summary>Noise</summary>
+            <div class="control-group">
+                <label>Resolution X</label>
+                <div class="input-row">
+                    <input type="range" id="resX" min="12" max="2000" value="600">
+                    <input type="number" id="resX_num" min="12" max="2000" value="600">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Resolution Y</label>
+                <div class="input-row">
+                    <input type="range" id="resY" min="12" max="2000" value="600">
+                    <input type="number" id="resY_num" min="12" max="2000" value="600">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Scale</label>
+                <div class="input-row">
+                    <input type="range" id="scale" min="0.1" max="100" value="40" step="0.1">
+                    <input type="number" id="scale_num" min="0.1" max="100" value="40" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Octaves</label>
+                <div class="input-row">
+                    <input type="range" id="octaves" min="1" max="8" value="6">
+                    <input type="number" id="octaves_num" min="1" max="8" value="6">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Persistence</label>
+                <div class="input-row">
+                    <input type="range" id="persistence" min="0" max="1" value="0.8" step="0.01">
+                    <input type="number" id="persistence_num" min="0" max="1" value="0.8" step="0.01">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Pixelation</label>
+                <div class="input-row">
+                    <input type="range" id="pixelation" min="1" max="10" value="1">
+                    <input type="number" id="pixelation_num" min="1" max="10" value="1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Power</label>
+                <div class="input-row">
+                    <input type="range" id="power" min="0.1" max="5" value="1" step="0.1">
+                    <input type="number" id="power_num" min="0.1" max="5" value="1" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Zoom</label>
+                <div class="input-row">
+                    <input type="range" id="canvasZoom" min="10" max="1000" value="100">
+                    <input type="number" id="canvasZoom_num" min="10" max="1000" value="100">%
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Seed</label>
+                <div class="input-row">
+                    <input type="range" id="seed" min="0" max="99999" value="12345">
+                    <input type="number" id="seed_num" min="0" max="99999" value="12345">
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 10px;">
+                <div class="input-row" style="justify-content: center; flex-wrap: wrap;">
+                    <label for="invert">Invert</label>
+                    <input type="checkbox" id="invert">
+                    <button id="btn-randomize">Randomize</button>
+                    <button id="btn-download">Download</button>
+                </div>
+            </div>
+        </details>
+        <details class="color-inputs colors-section" open>
+            <summary>Colors</summary>
+                <div id="colorContainer">
+                    <div class="control-group">
+                        <label>#175b7d</label>
+                        <input type="color" id="color1" value="#175b7d">
+                    </div>
+                    <div class="control-group">
+                        <label>#1a4a6e</label>
+                        <input type="color" id="color2" value="#1a4a6e">
+                    </div>
+                </div>
+                <div class="color-buttons">
+                    <button id="btn-add-color">Add Color</button>
+                    <button id="btn-remove-color">Remove Color</button>
+                </div>
+                <div class="control-group">
+                    <label>Brightness</label>
+                    <div class="input-row">
+                        <input type="range" id="menuBrightness" min="0" max="100" value="10">
+                        <input type="number" id="menuBrightness_num" min="0" max="100" value="10">
+                    </div>
+                </div>
+
+</details>
+        <details class="color-inputs shapes-section">
+            <summary>Minerals</summary>
+            <div class="control-group">
+                <div class="input-row" style="justify-content: center;">
+                    <label for="shapesEnabled">Add Minerals</label>
+                    <input type="checkbox" id="shapesEnabled">
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="input-row" style="justify-content: center;">
+                    <label for="pixelateMinerals">Apply Pixelation Filter</label>
+                    <input type="checkbox" id="pixelateMinerals" checked>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Shape</label>
+                <div class="input-row">
+                    <select id="shapeType">
+                        <option value="diamond">Diamond</option>
+                        <option value="square">Cube</option>
+                        <option value="circle">Orb</option>
+                        <option value="star">Star Crystal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Count</label>
+                <div class="input-row">
+                    <input type="range" id="shapeCount" min="1" max="200" value="10">
+                    <input type="number" id="shapeCount_num" min="1" max="200" value="10">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Size</label>
+                <div class="input-row">
+                    <input type="range" id="shapeSize" min="2" max="200" value="30">
+                    <input type="number" id="shapeSize_num" min="2" max="200" value="30">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Facets</label>
+                <div class="input-row">
+                    <input type="range" id="shapeFacets" min="3" max="12" value="6">
+                    <input type="number" id="shapeFacets_num" min="3" max="12" value="6">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Depth</label>
+                <div class="input-row">
+                    <input type="range" id="shapeDepth" min="0" max="100" value="50">
+                    <input type="number" id="shapeDepth_num" min="0" max="100" value="50">%
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Opacity</label>
+                <div class="input-row">
+                    <input type="range" id="shapeOpacity" min="0" max="100" value="80">
+                    <input type="number" id="shapeOpacity_num" min="0" max="100" value="80">%
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Rotation</label>
+                <div class="input-row">
+                    <input type="range" id="shapeRotation" min="0" max="360" value="0">
+                    <input type="number" id="shapeRotation_num" min="0" max="360" value="0">&deg;
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Color</label>
+                <div class="input-row" style="justify-content: center;">
+                    <input type="color" id="shapeColor" value="#88ccff">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Area</label>
+                <div class="input-row">
+                    <input type="range" id="shapeArea" min="1" max="100" value="100">
+                    <input type="number" id="shapeArea_num" min="1" max="100" value="100">%
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 6px;">
+                <div class="input-row" style="justify-content: center;">
+                    <button id="btn-scatter">Scatter</button>
+                </div>
+            </div>
+        </details>
+    </div>
+
+<script>
+// --- Simple Pseudo-Random Noise Logic ---
+class SimpleNoise {
+    constructor(seed) {
+        this.p = new Uint8Array(512);
+        const v = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) v[i] = i;
+        
+        let m = seed;
+        for (let i = 255; i > 0; i--) {
+            m = (m * 1103515245 + 12345) & 0x7fffffff;
+            let j = m % (i + 1);
+            [v[i], v[j]] = [v[j], v[i]];
+        }
+        for (let i = 0; i < 512; i++) this.p[i] = v[i & 255];
+    }
+
+    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    lerp(t, a, b) { return a + t * (b - a); }
+    grad(hash, x, y) {
+        const h = hash & 15;
+        const gradX = 1 + (h & 7); 
+        const gradY = 1 + (h >> 3); 
+        return ((h & 8) ? -gradX : gradX) * x + ((h & 4) ? -gradY : gradY) * y;
+    }
+
+    get(x, y) {
+        const X = Math.floor(x) & 255;
+        const Y = Math.floor(y) & 255;
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+        const u = this.fade(x);
+        const v = this.fade(y);
+        const p = this.p;
+
+        const aa = p[p[X] + Y], ab = p[p[X] + Y + 1];
+        const ba = p[p[X + 1] + Y], bb = p[p[X + 1] + Y + 1];
+
+        return this.lerp(v, 
+            this.lerp(u, this.grad(aa, x, y), this.grad(ba, x - 1, y)),
+            this.lerp(u, this.grad(ab, x, y - 1), this.grad(bb, x - 1, y - 1))
+        );
+    }
+}
+
+let colorIndex = 2;
+
+function addColor() {
+    colorIndex++;
+    const container = document.getElementById('colorContainer');
+    const div = document.createElement('div');
+    div.className = 'control-group';
+    const defVal = '#000000';
+    div.innerHTML = `<label>${defVal}</label><input type="color" id="color${colorIndex}" value="${defVal}">`;
+    container.appendChild(div);
+    _invalidateDOMCache();
+    const newInput = document.getElementById(`color${colorIndex}`);
+    newInput.addEventListener('change', () => {
+        newInput.previousElementSibling.textContent = newInput.value;
+        debouncedGenerate();
+    });
+    generate();
+}
+
+function removeColor() {
+    if (colorIndex > 2) {
+        const container = document.getElementById('colorContainer');
+        container.removeChild(container.lastElementChild);
+        _invalidateDOMCache();
+        colorIndex--;
+        generate();
+    }
+}
+
+function randomizeSeed() {
+    const seed = Math.floor(Math.random() * 99999);
+    document.getElementById('seed').value = seed;
+    document.getElementById('seed_num').value = seed;
+    generate();
+}
+
+function downloadImage() {
+    const a = document.createElement('a');
+    a.href = canvasEl.toDataURL('image/png');
+    a.download = 'perlynx-texture.png';
+    a.click();
+}
+
+let generateTimer;
+function debouncedGenerate() {
+    cancelAnimationFrame(generateTimer);
+    generateTimer = requestAnimationFrame(generate);
+}
+
+function getContrastColor(r, g, b) {
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luminance > 150 ? 'black' : 'white';
+}
+
+function hexToRgb(hex) {
+    const m = hex.match(/[0-9a-f]{2}/gi);
+    return m ? m.slice(0, 3).map(x => parseInt(x, 16)) : [0, 0, 0];
+}
+
+// Mineral generation state
+let mineralScatterSeed = 0;
+let mineralsArray = [];
+let lastMineralGenKey = '';
+let cachedNoiseImageData = null;
+let lastNoiseKey = '';
+
+// Mineral interaction state
+let selectedMineral = -1;
+let isDraggingMineral = false;
+let isResizingMineral = false;
+let isRotatingMineral = false;
+let mineralDragStartX = 0, mineralDragStartY = 0;
+let mineralOrigCx = 0, mineralOrigCy = 0;
+let mineralOrigSizeMult = 1;
+let mineralOrigRotJitter = 0;
+let mineralStartAngle = 0;
+let mineralStartDist = 0;
+
+const canvasEl = document.getElementById('canvas');
+const _elCache = {};
+function _el(id) { return _elCache[id] || (_elCache[id] = document.getElementById(id)); }
+
+function scatterMinerals() {
+    mineralScatterSeed = Math.floor(Math.random() * 99999);
+    lastMineralGenKey = '';
+    generate();
+}
+
+function generateMineralPositions() {
+    const seed = parseInt(_el('seed').value);
+    const shapeCount = parseInt(_el('shapeCount').value);
+    const shapeArea = parseInt(_el('shapeArea').value) / 100;
+    const resX = parseInt(_el('resX').value);
+    const resY = parseInt(_el('resY').value);
+    const shapeSeed = seed + 9999 + mineralScatterSeed;
+    let rng = shapeSeed;
+    const nextRand = () => { rng = (rng * 1103515245 + 12345) & 0x7fffffff; return rng / 0x7fffffff; };
+    mineralsArray = [];
+    for (let i = 0; i < shapeCount; i++) {
+        const rx = nextRand();
+        const ry = nextRand();
+        const sizeMult = 0.7 + nextRand() * 0.6;
+        const hueShift = (nextRand() - 0.5) * 30;
+        const rotJitter = (nextRand() - 0.5) * 0.3;
+        mineralsArray.push({
+            cx: resX/2 + (rx - 0.5) * resX * shapeArea,
+            cy: resY/2 + (ry - 0.5) * resY * shapeArea,
+            sizeMult, hueShift, rotJitter, facetSeed: rng
+        });
+    }
+    selectedMineral = -1;
+}
+
+function canvasToPixelCoords(e) {
+    const rect = canvasEl.getBoundingClientRect();
+    return {
+        x: (e.clientX - rect.left) / rect.width * canvasEl.width,
+        y: (e.clientY - rect.top) / rect.height * canvasEl.height
+    };
+}
+
+function hitTestMineralZone(px, py) {
+    const shapeSize = parseInt(_el('shapeSize').value);
+    // Check selected mineral's rotate ring first
+    if (selectedMineral >= 0 && selectedMineral < mineralsArray.length) {
+        const m = mineralsArray[selectedMineral];
+        const half = shapeSize * m.sizeMult / 2;
+        const dx = px - m.cx, dy = py - m.cy;
+        const dist2 = dx*dx + dy*dy;
+        if (dist2 >= half*half && dist2 < (half*1.5)*(half*1.5)) {
+            return { index: selectedMineral, zone: 'rotate' };
+        }
+    }
+    // Check all minerals back-to-front for move/resize
+    for (let i = mineralsArray.length - 1; i >= 0; i--) {
+        const m = mineralsArray[i];
+        const half = shapeSize * m.sizeMult / 2;
+        const dx = px - m.cx, dy = py - m.cy;
+        const dist2 = dx*dx + dy*dy;
+        if (dist2 < half*half) {
+            if (dist2 < (half*0.55)*(half*0.55)) return { index: i, zone: 'move' };
+            return { index: i, zone: 'resize' };
+        }
+    }
+    return null;
+}
+
+function drawMineralOutline(ctx, type, half) {
+    ctx.beginPath();
+    if (type === 'diamond') {
+        ctx.moveTo(0, -half); ctx.lineTo(half, 0); ctx.lineTo(0, half); ctx.lineTo(-half, 0);
+    } else if (type === 'square') {
+        ctx.rect(-half, -half, half*2, half*2);
+    } else if (type === 'circle') {
+        ctx.arc(0, 0, half, 0, Math.PI*2);
+    } else if (type === 'star') {
+        for (let j = 0; j < 10; j++) {
+            const r = j%2===0 ? half : half*0.4;
+            const a = j*Math.PI/5 - Math.PI/2;
+            j===0 ? ctx.moveTo(r*Math.cos(a), r*Math.sin(a)) : ctx.lineTo(r*Math.cos(a), r*Math.sin(a));
+        }
+    }
+    ctx.closePath();
+}
+
+function getMineralFacets(type, half, numFacets, rng, depth) {
+    const facets = [];
+    if (type === 'diamond') {
+        const outerPts = [[0,-half],[half,0],[0,half],[-half,0]];
+        const innerOff = half * 0.1 * depth;
+        for (let f = 0; f < 4; f++) {
+            const a = outerPts[f], b = outerPts[(f+1)%4];
+            const subCount = Math.max(1, Math.floor(numFacets / 4));
+            for (let s = 0; s < subCount; s++) {
+                const t0 = s/subCount, t1 = (s+1)/subCount;
+                const p0 = [a[0]+(b[0]-a[0])*t0, a[1]+(b[1]-a[1])*t0];
+                const p1 = [a[0]+(b[0]-a[0])*t1, a[1]+(b[1]-a[1])*t1];
+                const jitter = (rng()-0.5) * innerOff;
+                const ctr = [jitter, jitter];
+                const dx = (p0[0]+p1[0])/2, dy = (p0[1]+p1[1])/2;
+                const nx = dy * 0.01, ny = -dx * 0.01, nz = 1;
+                const nl = Math.sqrt(nx*nx+ny*ny+nz*nz);
+                facets.push({ pts: [ctr, p0, p1], cx: dx, cy: dy, nx: nx/nl, ny: ny/nl, nz: nz/nl });
+            }
+        }
+    } else if (type === 'square') {
+        const inset = half * (0.3 + depth * 0.2);
+        facets.push({ pts: [[-inset,-inset],[inset,-inset],[inset,inset],[-inset,inset]], cx:0, cy:0, nx:0, ny:0, nz:1 });
+        const outer = [[-half,-half],[half,-half],[half,half],[-half,half]];
+        const inner = [[-inset,-inset],[inset,-inset],[inset,inset],[-inset,inset]];
+        const sideNormals = [[0,-1,0.5],[1,0,0.5],[0,1,0.5],[-1,0,0.5]];
+        for (let f = 0; f < 4; f++) {
+            const a = outer[f], b = outer[(f+1)%4], c = inner[(f+1)%4], d = inner[f];
+            const sn = sideNormals[f];
+            const nl = Math.sqrt(sn[0]*sn[0]+sn[1]*sn[1]+sn[2]*sn[2]);
+            facets.push({ pts: [a,b,c,d], cx:(a[0]+c[0])/2, cy:(a[1]+c[1])/2, nx:sn[0]/nl, ny:sn[1]/nl, nz:sn[2]/nl });
+        }
+    } else if (type === 'circle') {
+        const rings = Math.max(2, Math.floor(numFacets / 2));
+        const segs = Math.max(6, numFacets);
+        for (let ring = 0; ring < rings; ring++) {
+            const r0 = half * ring / rings, r1 = half * (ring+1) / rings;
+            const elevInner = Math.sqrt(1 - (r0/half)*(r0/half));
+            const elevOuter = Math.sqrt(1 - (r1/half)*(r1/half));
+            for (let s = 0; s < segs; s++) {
+                const a0 = s/segs * Math.PI*2, a1 = (s+1)/segs * Math.PI*2;
+                const pts = [
+                    [Math.cos(a0)*r0, Math.sin(a0)*r0],
+                    [Math.cos(a0)*r1, Math.sin(a0)*r1],
+                    [Math.cos(a1)*r1, Math.sin(a1)*r1],
+                    [Math.cos(a1)*r0, Math.sin(a1)*r0]
+                ];
+                const mA = (a0+a1)/2;
+                const mR = (r0+r1)/2;
+                const nx = Math.cos(mA) * mR / half;
+                const ny = Math.sin(mA) * mR / half;
+                const nz = (elevInner + elevOuter) / 2;
+                const nl = Math.sqrt(nx*nx+ny*ny+nz*nz) || 1;
+                facets.push({ pts, cx: Math.cos(mA)*mR, cy: Math.sin(mA)*mR, nx:nx/nl, ny:ny/nl, nz:nz/nl });
+            }
+        }
+    } else if (type === 'star') {
+        const pts10 = [];
+        for (let j = 0; j < 10; j++) {
+            const r = j%2===0 ? half : half*0.4;
+            const a = j*Math.PI/5 - Math.PI/2;
+            pts10.push([r*Math.cos(a), r*Math.sin(a)]);
+        }
+        for (let j = 0; j < 10; j++) {
+            const a = pts10[j], b = pts10[(j+1)%10];
+            const mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
+            const dx = mx, dy = my;
+            const nz = 1 + depth * 0.5;
+            const nl = Math.sqrt(dx*dx*0.0001 + dy*dy*0.0001 + nz*nz);
+            facets.push({ pts: [[0,0], a, b], cx: mx/2, cy: my/2, nx: dx*0.01/nl, ny: dy*0.01/nl, nz: nz/nl });
+        }
+    }
+    return facets;
+}
+
+// Lazy-cached DOM queries for theming
+let _cachedButtons, _cachedLabels, _cachedInputs, _cachedSummaries;
+const _allButtons = () => _cachedButtons || (_cachedButtons = document.querySelectorAll('button:not(#menu-toggle)'));
+const _allLabels = () => _cachedLabels || (_cachedLabels = document.querySelectorAll('label'));
+const _allInputs = () => _cachedInputs || (_cachedInputs = document.querySelectorAll('.input-row input, .control-group input'));
+const _allSummaries = () => _cachedSummaries || (_cachedSummaries = document.querySelectorAll('.controls summary'));
+function _invalidateDOMCache() { _cachedButtons = _cachedLabels = _cachedInputs = _cachedSummaries = null; }
+
+function generate() {
+    const canvas = canvasEl;
+    const ctx = canvas.getContext('2d');
+    
+    const resX = parseInt(_el('resX').value);
+    const resY = parseInt(_el('resY').value);
+    const pixelation = Math.max(1, parseInt(_el('pixelation').value));
+    
+    if (canvas.width !== resX || canvas.height !== resY) {
+        canvas.width = resX;
+        canvas.height = resY;
+        cachedNoiseImageData = null;
+        lastNoiseKey = '';
+    }
+    const canvasZoom = parseInt(_el('canvasZoom').value) / 100;
+    canvas.style.width = Math.round(resX * canvasZoom) + 'px';
+    canvas.style.height = Math.round(resY * canvasZoom) + 'px';
+
+    const scaleInput = parseFloat(_el('scale').value);
+    const octaves = parseInt(_el('octaves').value);
+    const persistence = parseFloat(_el('persistence').value);
+    const seed = parseInt(_el('seed').value);
+    const power = parseFloat(_el('power').value);
+    const invert = _el('invert').checked;
+    
+    const colors = Array.from(document.querySelectorAll('#colorContainer input')).map(inp => hexToRgb(inp.value));
+    if (colors.length < 2) colors.push(colors.length ? colors[0] : [0,0,0]);
+
+    if (!generate._noiseCache || generate._noiseCache.seed !== seed) {
+        generate._noiseCache = { seed, instance: new SimpleNoise(seed) };
+    }
+    const noise = generate._noiseCache.instance;
+    const noiseKey = [resX, resY, pixelation, scaleInput, octaves, persistence, seed, power, invert, colors.map(c => c.join(',')).join(';')].join(',');
+    if (noiseKey !== lastNoiseKey) {
+        lastNoiseKey = noiseKey;
+        const imgData = ctx.createImageData(resX, resY);
+        for (let y = 0; y < resY; y += pixelation) {
+            for (let x = 0; x < resX; x += pixelation) {
+                let noiseValue = 0;
+                let amplitude = 1;
+                let freq = 1 / scaleInput;
+                let maxAmp = 0;
+
+                for (let i = 0; i < octaves; i++) {
+                    noiseValue += noise.get(x * freq, y * freq) * amplitude;
+                    maxAmp += amplitude;
+                    freq *= 2;
+                    amplitude *= persistence;
+                }
+
+                let t = (noiseValue / maxAmp) * 0.5 + 0.5;
+                t = Math.max(0, Math.min(1, t));
+                t = Math.pow(t, power);
+                if (invert) t = 1 - t; 
+
+                let r, g, b;
+                const numSegments = colors.length - 1;
+                const segment = Math.min(Math.floor(t * numSegments), numSegments - 1);
+                const localT = (t * numSegments) - segment;
+                r = (1 - localT) * colors[segment][0] + localT * colors[segment + 1][0];
+                g = (1 - localT) * colors[segment][1] + localT * colors[segment + 1][1];
+                b = (1 - localT) * colors[segment][2] + localT * colors[segment + 1][2];
+
+                // Fill the pixelation x pixelation block
+                for (let dy = 0; dy < pixelation && y + dy < resY; dy++) {
+                    for (let dx = 0; dx < pixelation && x + dx < resX; dx++) {
+                        const index = ((x + dx) + (y + dy) * resX) * 4;
+                        imgData.data[index] = r;
+                        imgData.data[index + 1] = g;
+                        imgData.data[index + 2] = b;
+                        imgData.data[index + 3] = 255;
+                    }
+                }
+            }
+        }
+        ctx.putImageData(imgData, 0, 0);
+        cachedNoiseImageData = ctx.getImageData(0, 0, resX, resY);
+    } else {
+        ctx.putImageData(cachedNoiseImageData, 0, 0);
+    }
+
+    // Draw 3D mineral shapes overlay
+    const shapesEnabled = _el('shapesEnabled').checked;
+    if (shapesEnabled) {
+        const genKey = [seed, _el('shapeCount').value, _el('shapeArea').value, resX, resY, mineralScatterSeed].join(',');
+        if (genKey !== lastMineralGenKey) {
+            lastMineralGenKey = genKey;
+            generateMineralPositions();
+        }
+
+        const shapeType = _el('shapeType').value;
+        const shapeSize = parseInt(_el('shapeSize').value);
+        const shapeOpacity = parseInt(_el('shapeOpacity').value) / 100;
+        const shapeRotation = parseInt(_el('shapeRotation').value) * Math.PI / 180;
+        const shapeColorHex = _el('shapeColor').value;
+        const shapeFacets = parseInt(_el('shapeFacets').value);
+        const shapeDepth = parseInt(_el('shapeDepth').value) / 100;
+        const [sR, sG, sB] = hexToRgb(shapeColorHex);
+
+        const pixelateMinerals = _el('pixelateMinerals').checked;
+        const shouldPixelate = pixelateMinerals && pixelation > 1;
+
+        let drawCtx = ctx;
+        let offCanvas = null;
+        if (shouldPixelate) {
+            if (!generate._offCanvas) generate._offCanvas = document.createElement('canvas');
+            offCanvas = generate._offCanvas;
+            drawCtx = offCanvas.getContext('2d');
+            if (offCanvas.width !== resX || offCanvas.height !== resY) {
+                offCanvas.width = resX;
+                offCanvas.height = resY;
+            } else {
+                drawCtx.clearRect(0, 0, resX, resY);
+            }
+        }
+
+        // Light direction (top-left)
+        const lightX = -0.5, lightY = -0.7, lightZ = 0.5;
+        const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
+        const lx = lightX/lightLen, ly = lightY/lightLen, lz = lightZ/lightLen;
+
+        for (let i = 0; i < mineralsArray.length; i++) {
+            const m = mineralsArray[i];
+            const sizeVar = shapeSize * m.sizeMult;
+            const half = sizeVar / 2;
+
+            drawCtx.save();
+            drawCtx.translate(m.cx, m.cy);
+            drawCtx.rotate(shapeRotation + m.rotJitter);
+
+            // Drop shadow
+            const shadowOff = half * 0.15 * shapeDepth;
+            drawCtx.save();
+            drawCtx.translate(shadowOff, shadowOff * 1.5);
+            drawCtx.globalAlpha = shapeOpacity * 0.3 * shapeDepth;
+            drawCtx.fillStyle = 'black';
+            drawCtx.filter = `blur(${Math.max(1, half * 0.15)}px)`;
+            drawMineralOutline(drawCtx, shapeType, half);
+            drawCtx.fill();
+            drawCtx.restore();
+            drawCtx.filter = 'none';
+
+            // Generate facet vertices (deterministic per mineral)
+            let facetRng = m.facetSeed;
+            const nextRandFacet = () => { facetRng = (facetRng * 1103515245 + 12345) & 0x7fffffff; return facetRng / 0x7fffffff; };
+            const facets = getMineralFacets(shapeType, half, shapeFacets, nextRandFacet, shapeDepth);
+
+            // Draw each facet with lighting
+            for (const facet of facets) {
+                const nx = facet.nx, ny = facet.ny, nz = facet.nz;
+                const dot = Math.max(0, nx*lx + ny*ly + nz*lz);
+                const ambient = 0.25;
+                const diffuse = dot * 0.55;
+                const specPow = 12;
+                const hx = lx, hy = ly, hz = lz + 1;
+                const hLen = Math.sqrt(hx*hx+hy*hy+hz*hz);
+                const specDot = Math.max(0, (nx*hx+ny*hy+nz*hz)/hLen);
+                const specular = Math.pow(specDot, specPow) * 0.7 * shapeDepth;
+                const brightness = Math.min(1, ambient + diffuse);
+
+                const noiseVal = noise.get((m.cx + facet.cx) * 0.05, (m.cy + facet.cy) * 0.05);
+                const textureMod = 1 + noiseVal * 0.15 * shapeDepth;
+
+                const fr = Math.max(0, Math.min(255, (sR + m.hueShift) * brightness * textureMod + specular * 255));
+                const fg = Math.max(0, Math.min(255, sG * brightness * textureMod + specular * 255));
+                const fb = Math.max(0, Math.min(255, (sB - m.hueShift * 0.5) * brightness * textureMod + specular * 255));
+
+                drawCtx.globalAlpha = shapeOpacity;
+                drawCtx.beginPath();
+                drawCtx.moveTo(facet.pts[0][0], facet.pts[0][1]);
+                for (let p = 1; p < facet.pts.length; p++) drawCtx.lineTo(facet.pts[p][0], facet.pts[p][1]);
+                drawCtx.closePath();
+                drawCtx.fillStyle = `rgb(${Math.round(fr)},${Math.round(fg)},${Math.round(fb)})`;
+                drawCtx.fill();
+
+                drawCtx.strokeStyle = `rgba(0,0,0,${0.2 * shapeDepth})`;
+                drawCtx.lineWidth = 0.5;
+                drawCtx.stroke();
+            }
+
+            // Specular highlight on top
+            if (shapeDepth > 0.1) {
+                const highlightR = half * 0.3;
+                const grad = drawCtx.createRadialGradient(-half*0.2, -half*0.3, 0, -half*0.2, -half*0.3, highlightR);
+                grad.addColorStop(0, `rgba(255,255,255,${0.5 * shapeDepth * shapeOpacity})`);
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                drawCtx.globalAlpha = 1;
+                drawCtx.fillStyle = grad;
+                drawCtx.beginPath();
+                drawCtx.arc(-half*0.2, -half*0.3, highlightR, 0, Math.PI*2);
+                drawCtx.fill();
+            }
+
+            drawCtx.restore();
+        }
+
+        // Selection highlight
+        if (selectedMineral >= 0 && selectedMineral < mineralsArray.length) {
+            const m = mineralsArray[selectedMineral];
+            const sizeVar = shapeSize * m.sizeMult;
+            drawCtx.save();
+            drawCtx.translate(m.cx, m.cy);
+            drawCtx.rotate(shapeRotation + m.rotJitter);
+            drawCtx.strokeStyle = 'rgba(255,255,255,0.8)';
+            drawCtx.lineWidth = 2;
+            drawCtx.setLineDash([4, 4]);
+            drawMineralOutline(drawCtx, shapeType, sizeVar/2);
+            drawCtx.stroke();
+            drawCtx.setLineDash([]);
+            drawCtx.restore();
+        }
+
+        // Pixelation compositing
+        if (shouldPixelate && offCanvas) {
+            const smallW = Math.max(1, Math.floor(resX / pixelation));
+            const smallH = Math.max(1, Math.floor(resY / pixelation));
+            if (!generate._smallCanvas) generate._smallCanvas = document.createElement('canvas');
+            const smallCanvas = generate._smallCanvas;
+            const smallCtx = smallCanvas.getContext('2d');
+            if (smallCanvas.width !== smallW || smallCanvas.height !== smallH) {
+                smallCanvas.width = smallW;
+                smallCanvas.height = smallH;
+            } else {
+                smallCtx.clearRect(0, 0, smallW, smallH);
+            }
+            smallCtx.drawImage(offCanvas, 0, 0, smallW, smallH);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(smallCanvas, 0, 0, resX, resY);
+            ctx.imageSmoothingEnabled = true;
+        }
+
+        drawCtx.globalAlpha = 1;
+    }
+
+    const isInteracting = isDraggingMineral || isResizingMineral || isRotatingMineral;
+    if (!isInteracting) {
+        const brightness = parseInt(_el('menuBrightness').value);
+        const menuColor = Math.round(25 + brightness * 1.8);
+        const menuBg = `rgb(${menuColor}, ${menuColor}, ${menuColor})`;
+        const sectionColor = Math.min(menuColor + 20, 255);
+        const sectionBg = `rgb(${sectionColor}, ${sectionColor}, ${sectionColor})`;
+        const contrast = getContrastColor(menuColor, menuColor, menuColor);
+
+        const dataURL = canvas.toDataURL();
+        document.querySelector('h1').style.backgroundImage = `url(${dataURL})`;
+        const fillImg = document.getElementById('perlin-fill-img');
+        if (fillImg) fillImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
+        _allButtons().forEach(btn => {
+            btn.style.backgroundImage = `url(${dataURL})`;
+            btn.style.color = contrast;
+        });
+        const controlsEl = document.querySelector('.controls');
+        const colorsSection = document.querySelector('.colors-section');
+        controlsEl.style.backgroundColor = menuBg;
+        controlsEl.style.color = contrast;
+        colorsSection.style.backgroundColor = sectionBg;
+        colorsSection.style.color = contrast;
+        document.body.style.backgroundColor = sectionBg;
+        controlsEl.style.setProperty('--thumb-color', contrast);
+        _allLabels().forEach(label => label.style.color = contrast);
+        _allSummaries().forEach(s => s.style.color = contrast);
+        const shapesSection = document.querySelector('.shapes-section');
+        if (shapesSection) { shapesSection.style.backgroundColor = sectionBg; shapesSection.style.color = contrast; }
+        const shapeSelect = document.getElementById('shapeType');
+        if (shapeSelect) { shapeSelect.style.backgroundColor = sectionBg; shapeSelect.style.borderColor = contrast === 'black' ? '#888' : '#ccc'; shapeSelect.style.color = contrast; }
+        _allInputs().forEach(inp => {
+            if (inp.type === 'checkbox') {
+                inp.style.accentColor = contrast;
+            } else {
+                inp.style.backgroundColor = sectionBg;
+                inp.style.borderColor = contrast === 'black' ? '#888' : '#ccc';
+                inp.style.color = contrast;
+            }
+        });
+    } // end if (!isInteracting)
+}
+
+const initialSeed = Math.floor(Math.random() * 99999);
+document.getElementById('seed').value = initialSeed;
+document.getElementById('seed_num').value = initialSeed;
+
+generate();
+
+document.querySelectorAll('input[type="range"]').forEach(range => {
+    const num = document.getElementById(range.id + '_num');
+    if (num) {
+        range.addEventListener('input', () => num.value = range.value);
+        num.addEventListener('input', () => range.value = num.value);
+    }
+});
+
+document.querySelectorAll('input').forEach(input => {
+    if (input.type === 'color') {
+        input.addEventListener('change', () => {
+            const label = input.closest('.control-group')?.querySelector('label');
+            if (label && input.closest('#colorContainer')) label.textContent = input.value;
+            debouncedGenerate();
+        });
+    } else if (input.type !== 'button') {
+        input.addEventListener('input', () => debouncedGenerate());
+    }
+});
+
+document.getElementById('shapeType').addEventListener('change', debouncedGenerate);
+
+const controls = document.querySelector('.controls');
+// Button event listeners
+document.getElementById('btn-randomize').addEventListener('click', randomizeSeed);
+document.getElementById('btn-download').addEventListener('click', downloadImage);
+document.getElementById('btn-add-color').addEventListener('click', addColor);
+document.getElementById('btn-remove-color').addEventListener('click', removeColor);
+document.getElementById('btn-scatter').addEventListener('click', scatterMinerals);
+
+// Panel drag state
+let isPanelDragging = false;
+let hasPanelDragged = false;
+let panelOffsetX, panelOffsetY;
+controls.style.cursor = 'grab';
+
+document.getElementById('menu-toggle').addEventListener('click', (e) => {
+    e.stopPropagation();
+    controls.classList.add('collapsed');
+    controls.style.cursor = 'pointer';
+});
+
+controls.addEventListener('mousedown', (e) => {
+    hasPanelDragged = false;
+    if (['INPUT','BUTTON','LABEL','SUMMARY','SELECT'].includes(e.target.tagName)) return;
+    const rect = controls.getBoundingClientRect();
+    if (!controls.classList.contains('collapsed') && e.clientX > rect.right - 16 && e.clientY > rect.bottom - 16) return;
+    isPanelDragging = true;
+    panelOffsetX = e.clientX - controls.offsetLeft;
+    panelOffsetY = e.clientY - controls.offsetTop;
+    if (!controls.classList.contains('collapsed')) controls.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isPanelDragging) {
+        hasPanelDragged = true;
+        const newLeft = Math.max(-controls.offsetWidth + 40, Math.min(window.innerWidth - 40, e.clientX - panelOffsetX));
+        const newTop = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - panelOffsetY));
+        controls.style.left = newLeft + 'px';
+        controls.style.top = newTop + 'px';
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isPanelDragging = false;
+    if (!controls.classList.contains('collapsed')) controls.style.cursor = 'grab';
+});
+
+controls.addEventListener('click', () => {
+    if (hasPanelDragged) return;
+    if (controls.classList.contains('collapsed')) {
+        controls.classList.remove('collapsed');
+        controls.style.cursor = 'grab';
+    }
+});
+
+// Touch support
+controls.addEventListener('touchstart', (e) => {
+    if (['INPUT','BUTTON','LABEL','SUMMARY','SELECT'].includes(e.target.tagName)) return;
+    const touch = e.touches[0];
+    const rect = controls.getBoundingClientRect();
+    if (!controls.classList.contains('collapsed') && touch.clientX > rect.right - 16 && touch.clientY > rect.bottom - 16) return;
+    hasPanelDragged = false;
+    isPanelDragging = true;
+    panelOffsetX = touch.clientX - controls.offsetLeft;
+    panelOffsetY = touch.clientY - controls.offsetTop;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (isPanelDragging) {
+        hasPanelDragged = true;
+        const touch = e.touches[0];
+        const newLeft = Math.max(-controls.offsetWidth + 40, Math.min(window.innerWidth - 40, touch.clientX - panelOffsetX));
+        const newTop = Math.max(0, Math.min(window.innerHeight - 40, touch.clientY - panelOffsetY));
+        controls.style.left = newLeft + 'px';
+        controls.style.top = newTop + 'px';
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+    if (isPanelDragging) {
+        isPanelDragging = false;
+        if (!hasPanelDragged && controls.classList.contains('collapsed')) {
+            controls.classList.remove('collapsed');
+            controls.style.cursor = 'grab';
+        }
+        if (!controls.classList.contains('collapsed')) controls.style.cursor = 'grab';
+    }
+});
+
+// Canvas mineral interaction
+const ZONE_CURSORS = { move: 'move', resize: 'nwse-resize', rotate: 'crosshair' };
+
+function startMineralAction(x, y, zoneHit) {
+    selectedMineral = zoneHit.index;
+    const m = mineralsArray[zoneHit.index];
+    mineralDragStartX = x;
+    mineralDragStartY = y;
+    mineralOrigCx = m.cx;
+    mineralOrigCy = m.cy;
+    mineralOrigSizeMult = m.sizeMult;
+    mineralOrigRotJitter = m.rotJitter;
+    mineralStartDist = Math.sqrt((x - m.cx)**2 + (y - m.cy)**2);
+    mineralStartAngle = Math.atan2(y - m.cy, x - m.cx);
+    if (zoneHit.zone === 'move') isDraggingMineral = true;
+    else if (zoneHit.zone === 'resize') isResizingMineral = true;
+    else if (zoneHit.zone === 'rotate') isRotatingMineral = true;
+}
+
+canvasEl.addEventListener('mousedown', (e) => {
+    if (!_el('shapesEnabled').checked) return;
+    const {x, y} = canvasToPixelCoords(e);
+    const zoneHit = hitTestMineralZone(x, y);
+    if (zoneHit) {
+        startMineralAction(x, y, zoneHit);
+        e.preventDefault();
+        generate();
+    } else {
+        if (selectedMineral >= 0) { selectedMineral = -1; generate(); }
+    }
+});
+
+canvasEl.addEventListener('mousemove', (e) => {
+    if (!_el('shapesEnabled').checked) return;
+    if (isDraggingMineral && selectedMineral >= 0) {
+        const {x, y} = canvasToPixelCoords(e);
+        mineralsArray[selectedMineral].cx = mineralOrigCx + (x - mineralDragStartX);
+        mineralsArray[selectedMineral].cy = mineralOrigCy + (y - mineralDragStartY);
+        generate();
+    } else if (isResizingMineral && selectedMineral >= 0) {
+        const {x, y} = canvasToPixelCoords(e);
+        const m = mineralsArray[selectedMineral];
+        const dist = Math.sqrt((x - mineralOrigCx)**2 + (y - mineralOrigCy)**2);
+        const ratio = mineralStartDist > 0 ? dist / mineralStartDist : 1;
+        m.sizeMult = Math.max(0.1, mineralOrigSizeMult * ratio);
+        generate();
+    } else if (isRotatingMineral && selectedMineral >= 0) {
+        const {x, y} = canvasToPixelCoords(e);
+        const m = mineralsArray[selectedMineral];
+        const angle = Math.atan2(y - m.cy, x - m.cx);
+        m.rotJitter = mineralOrigRotJitter + (angle - mineralStartAngle);
+        generate();
+    } else {
+        const {x, y} = canvasToPixelCoords(e);
+        const zoneHit = hitTestMineralZone(x, y);
+        canvasEl.style.cursor = zoneHit ? ZONE_CURSORS[zoneHit.zone] : '';
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isDraggingMineral = false;
+    isResizingMineral = false;
+    isRotatingMineral = false;
+});
+
+// Canvas touch support for minerals
+function touchToPixel(touch) {
+    const rect = canvasEl.getBoundingClientRect();
+    return {
+        x: (touch.clientX - rect.left) / rect.width * canvasEl.width,
+        y: (touch.clientY - rect.top) / rect.height * canvasEl.height
+    };
+}
+
+canvasEl.addEventListener('touchstart', (e) => {
+    if (!_el('shapesEnabled').checked) return;
+    const {x, y} = touchToPixel(e.touches[0]);
+    const zoneHit = hitTestMineralZone(x, y);
+    if (zoneHit) {
+        startMineralAction(x, y, zoneHit);
+        e.preventDefault();
+        generate();
+    }
+}, { passive: false });
+
+canvasEl.addEventListener('touchmove', (e) => {
+    if (selectedMineral < 0) return;
+    const {x, y} = touchToPixel(e.touches[0]);
+    const m = mineralsArray[selectedMineral];
+    if (isDraggingMineral) {
+        m.cx = mineralOrigCx + (x - mineralDragStartX);
+        m.cy = mineralOrigCy + (y - mineralDragStartY);
+    } else if (isResizingMineral) {
+        const dist = Math.sqrt((x - mineralOrigCx)**2 + (y - mineralOrigCy)**2);
+        const ratio = mineralStartDist > 0 ? dist / mineralStartDist : 1;
+        m.sizeMult = Math.max(0.1, mineralOrigSizeMult * ratio);
+    } else if (isRotatingMineral) {
+        const angle = Math.atan2(y - m.cy, x - m.cx);
+        m.rotJitter = mineralOrigRotJitter + (angle - mineralStartAngle);
+    }
+    e.preventDefault();
+    generate();
+}, { passive: false });
+
+canvasEl.addEventListener('touchend', () => {
+    isDraggingMineral = false;
+    isResizingMineral = false;
+    isRotatingMineral = false;
+});
+
+</script>
+</body>
+</html>
