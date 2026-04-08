@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,11 +48,34 @@
         .controls.collapsed #main-header { padding: 0 !important; margin: 0 !important; border-bottom: none !important; justify-content: center; }
         .controls.collapsed h1, .controls.collapsed #menu-toggle { display: none; }
         canvas { background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .custom-controls { position: fixed; top: 20px; right: 20px; z-index: 10; background: #f7f7f7; padding: 10px; border-radius: 12px; width: 260px; min-width: 180px; max-height: calc(100vh - 40px); display: grid; grid-template-columns: 1fr; gap: 8px; color: black; overflow: auto; resize: both; cursor: grab; }
+        .custom-controls summary { cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 2px 0; user-select: none; list-style: none; }
+        .custom-controls summary::-webkit-details-marker { display: none; }
+        .custom-controls summary::before { content: ''; display: inline-block; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; border-bottom: none; margin-right: 4px; vertical-align: middle; }
+        .custom-controls details:not([open]) > summary::before { border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; border-right: none; }
+        .custom-controls details { display: grid; gap: 8px; }
+        .custom-controls .cm-colors-section { background: #e7e7e7; padding: 10px; border-radius: 8px; }
+        #cm_colorContainer { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        #cm_colorContainer .control-group { align-items: center; width: auto; flex: 0 0 auto; }
+        #cm_colorContainer .control-group label { font-size: 10px; user-select: text; cursor: text; }
     </style>
 </head>
 <body>
 
     <noscript><p style="color:white;text-align:center">JavaScript is required to run Perlynx.</p></noscript>
+
+    <div id="carousel-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:12px; background:#f7f7f7; border-radius:16px; padding:8px 16px; box-shadow:0 2px 16px rgba(0,0,0,0.12); min-height:64px;">
+        <div id="carousel-list" style="display:flex; align-items:center; gap:10px;"></div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+            <button id="carousel-plus" title="Add new tile" style="width:44px; height:44px; border-radius:50%; font-size:28px; background:#e7e7e7; color:#333; border:2px solid #bbb; display:flex; align-items:center; justify-content:center;">+</button>
+            <label style="font-size:10px; color:#333;">New</label>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; margin-left:16px;">
+            <label style="font-size:11px; color:#333; margin-bottom:2px;">
+                <input type="checkbox" id="carousel-reset-on-new" style="vertical-align:middle; margin-right:2px;">Reset state on new tile
+            </label>
+        </div>
+    </div>
     <canvas id="canvas"></canvas>
 
     <div class="controls">
@@ -105,12 +131,30 @@
                     <input type="number" id="menuBrightness_num" min="0" max="100" value="10">
                 </div>
             </div>
+            <div class="control-group">
+                <label>Mask</label>
+                <div class="input-row">
+                    <select id="maskSelect" style="flex:1;">
+                        <option value="">None</option>
+                        <option value="Tunnel5.svg">Tunnel5</option>
+                        <option value="Tunnel6.svg">Tunnel6</option>
+                        <option value="Tunnel7.svg">Tunnel7</option>
+                        <option value="Tunnel8.svg">Tunnel8</option>
+                        <option value="Tunnel9.svg">Tunnel9</option>
+                        <option value="Tunnel10.svg">Tunnel10</option>
+                        <option value="Tunnel11.svg">Tunnel11</option>
+                        <option value="Tunnel12.svg">Tunnel12</option>
+                    </select>
+                </div>
+            </div>
             <div class="control-group" style="margin-top: 10px;">
                 <div class="input-row" style="justify-content: center; flex-wrap: wrap;">
                     <label for="invert">Invert</label>
                     <input type="checkbox" id="invert">
                     <button id="btn-randomize">Randomize</button>
                     <button id="btn-download">Download</button>
+                    <button id="btn-save-state">Save State</button>
+                    <button id="btn-load-state">Load State</button>
                 </div>
             </div>
         </details>
@@ -145,6 +189,13 @@
                 </div>
             </div>
             <div class="control-group">
+                <label>Blur</label>
+                <div class="input-row">
+                    <input type="range" id="blur" min="0" max="20" value="0" step="0.1">
+                    <input type="number" id="blur_num" min="0" max="20" value="0" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
                 <label>Pixelation</label>
                 <div class="input-row">
                     <input type="range" id="pixelation" min="1" max="10" value="1">
@@ -163,12 +214,12 @@
             <summary>Colors</summary>
                 <div id="colorContainer">
                     <div class="control-group">
-                        <label>#175b7d</label>
-                        <input type="color" id="color1" value="#175b7d">
+                        <label>#582b13</label>
+                        <input type="color" id="color1" value="#582b13">
                     </div>
                     <div class="control-group">
-                        <label>#1a4a6e</label>
-                        <input type="color" id="color2" value="#1a4a6e">
+                        <label>#63321d</label>
+                        <input type="color" id="color2" value="#63321d">
                     </div>
                 </div>
                 <div class="color-buttons">
@@ -198,14 +249,15 @@
                         <option value="square">Cube</option>
                         <option value="circle">Orb</option>
                         <option value="star">Star Crystal</option>
+                        <option value="custom">Custom</option>
                     </select>
                 </div>
             </div>
             <div class="control-group">
                 <label>Count</label>
                 <div class="input-row">
-                    <input type="range" id="shapeCount" min="1" max="200" value="10">
-                    <input type="number" id="shapeCount_num" min="1" max="200" value="10">
+                    <input type="range" id="shapeCount" min="1" max="200" value="5">
+                    <input type="number" id="shapeCount_num" min="1" max="200" value="5">
                 </div>
             </div>
             <div class="control-group">
@@ -215,11 +267,18 @@
                     <input type="number" id="shapeSize_num" min="2" max="200" value="30">
                 </div>
             </div>
-            <div class="control-group">
+            <div class="control-group" id="facetsGroup">
                 <label>Facets</label>
                 <div class="input-row">
                     <input type="range" id="shapeFacets" min="3" max="12" value="6">
                     <input type="number" id="shapeFacets_num" min="3" max="12" value="6">
+                </div>
+            </div>
+            <div class="control-group" id="customEdgesGroup" style="display:none">
+                <label>Edges</label>
+                <div class="input-row">
+                    <input type="range" id="customEdges" min="0" max="100" value="50">
+                    <input type="number" id="customEdges_num" min="0" max="100" value="50">
                 </div>
             </div>
             <div class="control-group">
@@ -246,14 +305,8 @@
             <div class="control-group">
                 <label>Area</label>
                 <div class="input-row">
-                    <input type="range" id="shapeArea" min="1" max="100" value="100">
-                    <input type="number" id="shapeArea_num" min="1" max="100" value="100">%
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Color</label>
-                <div class="input-row" style="justify-content: center;">
-                    <input type="color" id="shapeColor" value="#88ccff">
+                    <input type="range" id="shapeArea" min="1" max="100" value="70">
+                    <input type="number" id="shapeArea_num" min="1" max="100" value="70">%
                 </div>
             </div>
             <div class="control-group" style="margin-top: 6px;">
@@ -264,8 +317,391 @@
         </details>
     </div>
 
+    <div class="custom-controls" id="customPanel" style="display:none">
+        <div id="cm-header" style="display: flex; align-items: center; gap: 4px; justify-content: center; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+            <h2 style="margin: 0; font-size: 14px;">Material</h2>
+        </div>
+        <div class="control-group" style="margin-top: 8px;">
+            <div class="input-row" style="justify-content: center;">
+                <label for="cmPerlinEnabled">Perlin Noise</label>
+                <input type="checkbox" id="cmPerlinEnabled">
+            </div>
+        </div>
+        <div id="cmPerlinControls" style="display:none">
+            <div class="control-group">
+                <label>Scale</label>
+                <div class="input-row">
+                    <input type="range" id="cm_scale" min="0.1" max="100" value="20" step="0.1">
+                    <input type="number" id="cm_scale_num" min="0.1" max="100" value="20" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Octaves</label>
+                <div class="input-row">
+                    <input type="range" id="cm_octaves" min="1" max="8" value="4">
+                    <input type="number" id="cm_octaves_num" min="1" max="8" value="4">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Persistence</label>
+                <div class="input-row">
+                    <input type="range" id="cm_persistence" min="0" max="1" value="0.5" step="0.01">
+                    <input type="number" id="cm_persistence_num" min="0" max="1" value="0.5" step="0.01">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Power</label>
+                <div class="input-row">
+                    <input type="range" id="cm_power" min="0.1" max="5" value="1" step="0.1">
+                    <input type="number" id="cm_power_num" min="0.1" max="5" value="1" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Blur</label>
+                <div class="input-row">
+                    <input type="range" id="cm_blur" min="0" max="20" value="0" step="0.1">
+                    <input type="number" id="cm_blur_num" min="0" max="20" value="0" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Pixelation</label>
+                <div class="input-row">
+                    <input type="range" id="cm_pixelation" min="1" max="10" value="1">
+                    <input type="number" id="cm_pixelation_num" min="1" max="10" value="1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Seed</label>
+                <div class="input-row">
+                    <input type="range" id="cm_seed" min="0" max="99999" value="42">
+                    <input type="number" id="cm_seed_num" min="0" max="99999" value="42">
+                </div>
+            </div>
+            <div class="control-group" style="margin-top: 6px;">
+                <div class="input-row" style="justify-content: center;">
+                    <button id="cm_btn-randomize">Randomize</button>
+                </div>
+            </div>
+        </div>
+        <details class="color-inputs cm-colors-section" open>
+            <summary>Colors</summary>
+            <div id="cm_colorContainer">
+                <div class="control-group">
+                    <label>#5c5651</label>
+                    <input type="color" id="cm_color1" value="#5c5651">
+                </div>
+                <div class="control-group">
+                    <label>#534e4b</label>
+                    <input type="color" id="cm_color2" value="#534e4b">
+                </div>
+                <div class="control-group">
+                    <label>#454545</label>
+                    <input type="color" id="cm_color3" value="#454545">
+                </div>
+                <div class="control-group">
+                    <label>#595959</label>
+                    <input type="color" id="cm_color4" value="#595959">
+                </div>
+            </div>
+            <div class="color-buttons">
+                <button id="cm_btn-add-color">Add Color</button>
+                <button id="cm_btn-remove-color">Remove Color</button>
+            </div>
+        </details>
+    </div>
+
 <script>
+// --- Mask State ---
+// Inline base64 data URLs — avoids fetch() and canvas tainting on file://
+const _maskDataURLs = {
+    'Tunnel5.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNDggLTYgYzY4IC05IDM0OCAtOSA0MDUgLTEgNDcgOCA0NyA4IDQ3IDQ2IGwwIDM5Ci0yNTAgMCAtMjUwIDAgMCAtMzl6Ii8+CjxwYXRoIGQ9Ik0wIDQwIGwwIC00MCA0MCAwIGMyMiAwIDQwIDIgNDAgNSAwIDE4IC0yNiA1NSAtNDcgNjQgLTMzIDE1IC0zMyAxNgotMzMgLTI5eiIvPgo8cGF0aCBkPSJNNDUxIDUxIGMtNDEgLTM5IC0zOSAtNTEgOSAtNTEgbDQwIDAgMCA0MCBjMCAyMiAtNCA0MCAtOSA0MCAtNSAwCi0yMyAtMTMgLTQwIC0yOXoiLz4KPC9nPgo8L3N2Zz4K',
+    'Tunnel6.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDI1MCBsMCAtMjUwIDQwIDAgNDAgMCAyIDQ4IGMwIDI2IDIgMTAxIDMgMTY3IDEgMTI2IDE1IDE3NCA1MwoxOTEgOSA0IDc4IDggMTUyIDkgMjM1IDQgMjEwIC0xIDIxMCA0NSBsMCA0MCAtMjUwIDAgLTI0OSAwIC0xIC0yNTB6Ii8+CjxwYXRoIGQ9Ik00NjcgNzIgYy0xNCAtNiAtNDcgLTUzIC00NyAtNjggMCAtMiAxOCAtNCA0MCAtNCBsNDAgMCAwIDQwIGMwIDQxCi0yIDQ0IC0zMyAzMnoiLz4KPC9nPgo8L3N2Zz4K',
+    'Tunnel7.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ1OSBjMCAtMzMgMyAtNDAgMTYgLTM1IDkgMyAyMCA2IDI1IDYgOCAwIDM5IDUxIDM5IDY1IDAgMyAtMTggNQotNDAgNSBsLTQwIDAgMCAtNDF6Ii8+CjxwYXRoIGQ9Ik00MjUgNDc4IGM0IC0xMyAxMiAtMjggMTkgLTM0IDYgLTcgMjEgLTE1IDM0IC0xOSAyMCAtNiAyMiAtMyAyMiAzNAppbDAgNDEgLTQxIDAgYy0zNyAwIC00MCAtMiAtMzQgLTIyeiIvPgo8cGF0aCBkPSJNNDQ5IDQ4IGMtMTYgLTE4IC0yOSAtMzYgLTI5IC00MCAwIC01IDE4IC04IDQwIC04IGw0MCAwIDAgNDAgYzAgNDgKLTEyIDUwIC01MSA4eiIvPgo8L2c+Cjwvc3ZnPgo=',
+    'Tunnel8.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MCBjMCAtNDUgMCAtNDQgMzMgLTI5IDIxIDkgNDcgNDYgNDcgNjQgMCAzIC0xOCA1IC00MCA1IGwtNDAgMAowIC00MHoiLz4KPHBhdGggZD0iTTQyMCA0ODggYzEgLTIwIDMzIC01NSA1OCAtNjMgMjAgLTYgMjIgLTMgMjIgMzQgbDAgNDEgLTQwIDAgYy0yNSAwCi00MCAtNSAtNDAgLTEyeiIvPgo8cGF0aCBkPSJNMCA0MCBsMCAtNDAgNDEgMCA0MSAwIC0xNyAyOCBjLTE5IDI5IC00NCA1MiAtNTcgNTIgLTQgMCAtOCAtMTggLTgKLTQweiIvPgo8cGF0aCBkPSJNNDU4IDYwIGMtMTQgLTExIC0yOCAtMjkgLTMxIC00MCAtNCAtMTggMCAtMjAgMzQgLTIwIDM5IDAgMzkgMCAzOQo0MCAwIDQ1IC03IDQ4IC00MiAyMHoiLz4KPC9nPgo8L3N2Zz4K',
+    'Tunnel9.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtNDAgNTggLTYgYzMxIC0zIDY2IC0xMCA3OCAtMTUgMTIgLTQgMjcgLTQgMzUgMSA4IDUgMzQgOQo1OSA5IDI1IDAgNzQgMSAxMTAgMyAzNiAyIDg2IDUgMTEzIDUgbDQ3IDIgMCA0MCAwIDQwIC0yNTAgMCAtMjUwIDAgMCAtMzl6Ii8+CjwvZz4KPC9zdmc+Cg==',
+    'Tunnel10.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDI1MCBsMCAtMjUwIDQwIDAgNDAgMCAxIDQzIGMxIDIzIDIgODUgMyAxMzkgMSA1MyA0IDEwMCA5IDEwNCA0CjQgNyAxNyA3IDI5IDAgMzMgMzAgODUgNTQgOTQgMTEgNSA3NyA3IDE0NiA2IDY5IC0xIDE0MiAwIDE2MyAzIDM2IDQgMzcgNiAzNwo0MyBsMCAzOSAtMjUwIDAgLTI1MCAwIDAgLTI1MHoiLz4KPC9nPgo8L3N2Zz4K',
+    'Tunnel11.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNDggLTYgYzI2IC0zIDgzIC00IDEyNyAtMiA0NCAxIDkzIC0yIDEwOCAtNyAyMCAtNyAzNQotNiA1MiAzIDE2IDggNDEgMTEgNzAgNiA3NiAtMTAgOTUgLTEgOTUgNDUgbDAgMzkgLTI1MCAwIC0yNTAgMCAwIC0zOXoiLz4KPHBhdGggZD0iTTU1IDkwIGMtMyAtNSAtMTcgLTEwIC0zMSAtMTAgLTIxIDAgLTI0IC00IC0yNCAtNDAgbDAgLTQwIDI1MCAwCjI1MCAwIDAgMzkgMCAzOCAtNjEgNyBjLTM0IDMgLTc4IDMgLTk5IDAgLTIyIC00IC01MiAtMiAtNjkgNCAtMjEgNyAtNTEgNwotMTAxIDAgLTUyIC04IC03NCAtOCAtODMgMSAtMTQgMTQgLTI0IDE0IC0zMiAxeiIvPgo8L2c+Cjwvc3ZnPgo=',
+    'Tunnel12.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNTMgLTggYzI4IC00IDEwMiAtOCAxNjIgLTkgMTYwIC0yIDE5NiAtMjYgMjEwIC0xNDEgOAotNzIgLTkgLTE0MCAtMzkgLTE1OSAtMjggLTE3IC0xMzAgLTI2IC0xODQgLTE2IC0yNSA1IC03OCA0IC0xMjMgLTEgbC03OSAtMTEKMCAtMzggMCAtMzkgMjUwIDAgMjUwIDAgMCAyNTAgMCAyNTAgLTI1MCAwIC0yNTAgMCAwIC0zOXoiLz4KPC9nPgo8L3N2Zz4K',
+};
+let maskImage = null;
+let maskLoadedSrc = '';
+// _applyMask: syncs maskImage to filename, then calls done()
+function _applyMask(filename, done) {
+    if (!filename) {
+        maskImage = null;
+        maskLoadedSrc = '';
+        canvasEl.style.background = '#000';
+        done();
+        return;
+    }
+    if (maskLoadedSrc === filename && maskImage) {
+        canvasEl.style.background = 'transparent';
+        done();
+        return;
+    }
+    const dataURL = _maskDataURLs[filename];
+    if (!dataURL) { maskImage = null; maskLoadedSrc = ''; done(); return; }
+    const img = new Image();
+    img.onload = () => {
+        maskImage = img;
+        maskLoadedSrc = filename;
+        canvasEl.style.background = 'transparent';
+        done();
+    };
+    img.onerror = () => { maskImage = null; maskLoadedSrc = ''; done(); };
+    img.src = dataURL;
+}
+function loadMask(filename) {
+    _applyMask(filename, generate);
+}
+
 // --- Simple Pseudo-Random Noise Logic ---
+// --- Carousel State ---
+let carouselTiles = [];
+let carouselCurrentIndex = 0;
+const carouselListEl = () => document.getElementById('carousel-list');
+const carouselContainerEl = () => document.getElementById('carousel-container');
+const carouselResetOnNewEl = () => document.getElementById('carousel-reset-on-new');
+
+function getTilePreviewDataURL() {
+    // Render a small thumbnail of the canvas
+    const canvas = document.getElementById('canvas');
+    const thumb = document.createElement('canvas');
+    const size = 48;
+    thumb.width = size;
+    thumb.height = size;
+    const ctx = thumb.getContext('2d');
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0,0,size,size);
+    // Center-crop
+    const minDim = Math.min(canvas.width, canvas.height);
+    ctx.drawImage(canvas,
+        (canvas.width-minDim)/2, (canvas.height-minDim)/2, minDim, minDim,
+        0,0,size,size);
+    return thumb.toDataURL('image/png');
+}
+
+function renderCarousel() {
+    const list = carouselListEl();
+    list.innerHTML = '';
+    // Get menu background and border color for styling
+    const controlsEl = document.querySelector('.controls');
+    const menuBg = controlsEl ? getComputedStyle(controlsEl).backgroundColor : '#f7f7f7';
+    const menuBorder = controlsEl ? getComputedStyle(controlsEl).color : '#333';
+    carouselContainerEl().style.background = menuBg;
+    carouselContainerEl().style.boxShadow = '0 2px 16px rgba(0,0,0,0.12)';
+    carouselTiles.forEach((tile, idx) => {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        div.style.alignItems = 'center';
+        div.style.gap = '2px';
+        div.style.cursor = 'pointer';
+        div.style.opacity = idx === carouselCurrentIndex ? '1' : '0.7';
+        div.style.border = idx === carouselCurrentIndex ? `2px solid ${menuBorder}` : '2px solid #bbb';
+        div.style.borderRadius = '8px';
+        div.style.background = menuBg;
+        div.style.padding = '2px';
+        div.title = 'Click to load tile';
+        div.setAttribute('data-index', idx);
+        const img = document.createElement('img');
+        img.src = tile.preview;
+        img.width = 44;
+        img.height = 44;
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '6px';
+        div.appendChild(img);
+        list.appendChild(div);
+    });
+    // Use event delegation for robust click handling
+    list.onclick = function(e) {
+        let target = e.target;
+        while (target && target !== list && !target.hasAttribute('data-index')) {
+            target = target.parentElement;
+        }
+        if (target && target.hasAttribute('data-index')) {
+            const idx = parseInt(target.getAttribute('data-index'));
+            if (!isNaN(idx) && idx !== carouselCurrentIndex && carouselTiles[idx]) {
+                // Save current tile before switching
+                if (carouselTiles[carouselCurrentIndex]) {
+                    carouselTiles[carouselCurrentIndex].state = getAllState();
+                    carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+                }
+                carouselCurrentIndex = idx;
+                setAllState(carouselTiles[idx].state);
+                renderCarousel();
+            }
+        }
+    };
+}
+
+function addTileToCarousel(state, preview) {
+    carouselTiles.push({ state: JSON.parse(JSON.stringify(state)), preview });
+    carouselCurrentIndex = carouselTiles.length - 1;
+    renderCarousel();
+}
+
+function updateCurrentTilePreview() {
+    if (carouselTiles[carouselCurrentIndex]) {
+        carouselTiles[carouselCurrentIndex].state = getAllState();
+        carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+        // Just update the thumbnail image in-place — no full re-render needed
+        const list = carouselListEl();
+        const imgEl = list.querySelector(`[data-index="${carouselCurrentIndex}"] img`);
+        if (imgEl) imgEl.src = carouselTiles[carouselCurrentIndex].preview;
+    }
+}
+
+function handleCarouselPlus() {
+    // Current tile state is already up-to-date (saved on every generate).
+    // Snapshot it now just in case the user hasn't triggered a generate yet.
+    if (carouselTiles.length > 0) {
+        carouselTiles[carouselCurrentIndex].state = getAllState();
+        carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+    }
+    // Build state for the new tile
+    const newState = carouselResetOnNewEl().checked
+        ? getDefaultState()
+        : JSON.parse(JSON.stringify(getAllState()));
+    // Switch to the new tile BEFORE calling setAllState so the
+    // auto-save in updateCurrentTilePreview targets the new slot
+    carouselTiles.push({ state: newState, preview: '' });
+    carouselCurrentIndex = carouselTiles.length - 1;
+    setAllState(newState);   // triggers generate → updateCurrentTilePreview fills preview
+    renderCarousel();
+}
+
+function getDefaultState() {
+    // Create a default state by resetting all UI
+    // We'll simulate by reloading the page and capturing state, but here just use initial values
+    const dummy = document.createElement('div');
+    dummy.innerHTML = `<input id='resX' value='600'><input id='resY' value='600'><input id='canvasZoom' value='100'><input id='menuBrightness' value='10'><input id='invert' type='checkbox'><input id='scale' value='40'><input id='octaves' value='6'><input id='persistence' value='0.8'><input id='power' value='1'><input id='blur' value='0'><input id='pixelation' value='1'><input id='seed' value='12345'><input id='color1' value='#582b13'><input id='color2' value='#63321d'><input id='shapesEnabled' type='checkbox'><input id='pixelateMinerals' type='checkbox' checked><input id='shapeType' value='diamond'><input id='shapeCount' value='5'><input id='shapeSize' value='30'><input id='shapeFacets' value='6'><input id='customEdges' value='50'><input id='shapeDepth' value='50'><input id='shapeOpacity' value='80'><input id='shapeRotation' value='0'><input id='shapeArea' value='70'>`;
+    // Use getAllState after setting these values
+    // Instead, just return a deep copy of the first tile if exists, else current state
+    if (carouselTiles.length > 0) return JSON.parse(JSON.stringify(carouselTiles[0].state));
+    return JSON.parse(JSON.stringify(getAllState()));
+}
+
+function carouselInit() {
+    // On first load, add the current tile
+    if (carouselTiles.length === 0) {
+        addTileToCarousel(getAllState(), getTilePreviewDataURL());
+    }
+    renderCarousel();
+}
+
+// --- Save/Load State Logic ---
+function getAllState() {
+    // Gather all input values
+    const state = { inputs: {}, colors: [], mineralsArray: [], cmColors: [] };
+    document.querySelectorAll('.controls input, .controls select').forEach(inp => {
+        if (inp.type === 'checkbox') state.inputs[inp.id] = inp.checked;
+        else state.inputs[inp.id] = inp.value;
+    });
+    // Gather main colors
+    state.colors = Array.from(document.querySelectorAll('#colorContainer input[type="color"]')).map(inp => inp.value);
+    // Gather custom material colors
+    state.cmColors = Array.from(document.querySelectorAll('#cm_colorContainer input[type="color"]')).map(inp => inp.value);
+    // Gather mineralsArray
+    state.mineralsArray = mineralsArray.map(m => Object.assign({}, m));
+    state.mineralScatterSeed = mineralScatterSeed;
+    return state;
+}
+
+function getAllTilesState() {
+    // Save all tiles for export
+    return carouselTiles.map(tile => ({ state: tile.state, preview: tile.preview }));
+}
+
+function setAllTilesState(tiles) {
+    carouselTiles = tiles.map(tile => ({ state: tile.state, preview: tile.preview }));
+    carouselCurrentIndex = 0;
+    if (carouselTiles.length > 0) {
+        setAllState(carouselTiles[0].state);
+    }
+    renderCarousel();
+}
+
+function setAllState(state) {
+    // Restore all input values
+    for (const [id, val] of Object.entries(state.inputs || {})) {
+        const inp = document.getElementById(id);
+        if (!inp) continue;
+        if (inp.type === 'checkbox') inp.checked = !!val;
+        else inp.value = val;
+    }
+    // Restore main colors
+    const colorContainer = document.getElementById('colorContainer');
+    while (colorContainer.children.length > state.colors.length) removeColor();
+    while (colorContainer.children.length < state.colors.length) addColor();
+    Array.from(colorContainer.querySelectorAll('input[type="color"]')).forEach((inp, i) => {
+        inp.value = state.colors[i];
+        const label = inp.closest('.control-group')?.querySelector('label');
+        if (label) label.textContent = state.colors[i];
+    });
+    // Restore custom material colors
+    const cmColorContainer = document.getElementById('cm_colorContainer');
+    while (cmColorContainer.children.length > state.cmColors.length) removeCMColor();
+    while (cmColorContainer.children.length < state.cmColors.length) addCMColor();
+    Array.from(cmColorContainer.querySelectorAll('input[type="color"]')).forEach((inp, i) => {
+        inp.value = state.cmColors[i];
+        const label = inp.closest('.control-group')?.querySelector('label');
+        if (label) label.textContent = state.cmColors[i];
+    });
+    // Restore mineralsArray and mineralScatterSeed
+    mineralsArray = (state.mineralsArray || []).map(m => Object.assign({}, m));
+    mineralScatterSeed = state.mineralScatterSeed || 0;
+    mineralsArrayLoadedFromState = true;
+    // Update UI
+    updateCustomPanelVisibility();
+    // Sync mask image to match restored maskSelect value, then generate
+    const targetMask = (document.getElementById('maskSelect') || {}).value || '';
+    _applyMask(targetMask, () => {
+        if (state.inputs && state.inputs.shapesEnabled) {
+            setTimeout(() => { generate(); }, 0);
+        } else {
+            generate();
+        }
+    });
+}
+
+function saveStateToFile() {
+    const allTiles = getAllTilesState();
+    const blob = new Blob([JSON.stringify({ tiles: allTiles }, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'perlynx-state.json';
+    a.click();
+}
+
+function loadStateFromFile() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = evt => {
+            try {
+                const data = JSON.parse(evt.target.result);
+                if (data.tiles) {
+                    setAllTilesState(data.tiles);
+                } else {
+                    setAllState(data);
+                    // If old format, add as single tile
+                    carouselTiles = [{ state: data, preview: getTilePreviewDataURL() }];
+                    carouselCurrentIndex = 0;
+                    renderCarousel();
+                }
+            } catch (err) {
+                alert('Failed to load state: ' + err);
+            }
+        };
+        reader.readAsText(file);
+    };
+    inp.click();
+}
 class SimpleNoise {
     constructor(seed) {
         this.p = new Uint8Array(512);
@@ -369,11 +805,87 @@ function hexToRgb(hex) {
 }
 
 // Mineral generation state
+
 let mineralScatterSeed = 0;
 let mineralsArray = [];
 let lastMineralGenKey = '';
 let cachedNoiseImageData = null;
 let lastNoiseKey = '';
+let cmColorIndex = 4;
+let mineralsArrayLoadedFromState = false;
+
+function generateCustomOutline(half, edges01, rngFn) {
+    const numPts = Math.round(8 + edges01 * 16);
+    const radiusVar = 0.1 + edges01 * 0.4;
+    const ctrl = [];
+    for (let i = 0; i < numPts; i++) {
+        const a = (i / numPts) * Math.PI * 2;
+        const r = half * (1 - radiusVar + rngFn() * radiusVar * 2);
+        ctrl.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+    }
+    const subdivs = Math.max(1, Math.round(10 * (1 - edges01)));
+    if (subdivs <= 1) return ctrl;
+    const result = [];
+    for (let i = 0; i < numPts; i++) {
+        const p0 = ctrl[(i - 1 + numPts) % numPts];
+        const p1 = ctrl[i];
+        const p2 = ctrl[(i + 1) % numPts];
+        const p3 = ctrl[(i + 2) % numPts];
+        for (let j = 0; j < subdivs; j++) {
+            const t = j / subdivs;
+            const t2 = t * t, t3 = t2 * t;
+            result.push({
+                x: 0.5 * ((2*p1.x) + (-p0.x+p2.x)*t + (2*p0.x-5*p1.x+4*p2.x-p3.x)*t2 + (-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+                y: 0.5 * ((2*p1.y) + (-p0.y+p2.y)*t + (2*p0.y-5*p1.y+4*p2.y-p3.y)*t2 + (-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+            });
+        }
+    }
+    return result;
+}
+
+function addCMColor() {
+    cmColorIndex++;
+    const container = document.getElementById('cm_colorContainer');
+    const div = document.createElement('div');
+    div.className = 'control-group';
+    const defVal = '#000000';
+    div.innerHTML = `<label>${defVal}</label><input type="color" id="cm_color${cmColorIndex}" value="${defVal}">`;
+    container.appendChild(div);
+    _invalidateDOMCache();
+    const newInput = document.getElementById(`cm_color${cmColorIndex}`);
+    newInput.addEventListener('change', () => {
+        newInput.previousElementSibling.textContent = newInput.value;
+        debouncedGenerate();
+    });
+    generate();
+}
+
+function removeCMColor() {
+    if (cmColorIndex > 2) {
+        const container = document.getElementById('cm_colorContainer');
+        container.removeChild(container.lastElementChild);
+        _invalidateDOMCache();
+        cmColorIndex--;
+        generate();
+    }
+}
+
+function randomizeCMSeed() {
+    const seed = Math.floor(Math.random() * 99999);
+    document.getElementById('cm_seed').value = seed;
+    document.getElementById('cm_seed_num').value = seed;
+    generate();
+}
+
+function updateCustomPanelVisibility() {
+    const isCustom = _el('shapeType').value === 'custom';
+    const shapesOn = _el('shapesEnabled').checked;
+    _el('customPanel').style.display = shapesOn ? '' : 'none';
+    _el('customEdgesGroup').style.display = isCustom ? '' : 'none';
+    _el('facetsGroup').style.display = isCustom ? 'none' : '';
+    const perlinOn = _el('cmPerlinEnabled').checked;
+    _el('cmPerlinControls').style.display = perlinOn ? '' : 'none';
+}
 
 // Mineral interaction state
 let selectedMineral = -1;
@@ -398,26 +910,65 @@ function scatterMinerals() {
 }
 
 function generateMineralPositions() {
-    const seed = parseInt(_el('seed').value);
+    if (mineralsArrayLoadedFromState) {
+        if (mineralsArray.length > 0) {
+            mineralsArrayLoadedFromState = false;
+            return;
+        }
+        mineralsArrayLoadedFromState = false;
+    }
     const shapeCount = parseInt(_el('shapeCount').value);
     const shapeArea = parseInt(_el('shapeArea').value) / 100;
     const resX = parseInt(_el('resX').value);
     const resY = parseInt(_el('resY').value);
-    const shapeSeed = seed + 9999 + mineralScatterSeed;
+    const shapeSeed = 9999 + mineralScatterSeed;
     let rng = shapeSeed;
     const nextRand = () => { rng = (rng * 1103515245 + 12345) & 0x7fffffff; return rng / 0x7fffffff; };
     mineralsArray = [];
+    const maxTries = 50;
     for (let i = 0; i < shapeCount; i++) {
-        const rx = nextRand();
-        const ry = nextRand();
-        const sizeMult = 0.7 + nextRand() * 0.6;
-        const hueShift = (nextRand() - 0.5) * 30;
-        const rotJitter = (nextRand() - 0.5) * 0.3;
-        mineralsArray.push({
-            cx: resX/2 + (rx - 0.5) * resX * shapeArea,
-            cy: resY/2 + (ry - 0.5) * resY * shapeArea,
-            sizeMult, hueShift, rotJitter, facetSeed: rng
-        });
+        let placed = false;
+        let tries = 0;
+        let newMineral = null;
+        while (!placed && tries < maxTries) {
+            const rx = nextRand();
+            const ry = nextRand();
+            // Much wider size variation
+            const sizeMult = 0.3 + nextRand() * 1.7; // 0.3 to 2.0
+            const hueShift = (nextRand() - 0.5) * 30;
+            const rotJitter = (nextRand() - 0.5) * 0.3;
+            const cx = resX/2 + (rx - 0.5) * resX * shapeArea;
+            const cy = resY/2 + (ry - 0.5) * resY * shapeArea;
+            const shapeSize = parseInt(_el('shapeSize').value);
+            let overlap = false;
+            for (const m of mineralsArray) {
+                const minDist = (shapeSize * sizeMult + shapeSize * m.sizeMult) * 0.52;
+                const dx = m.cx - cx, dy = m.cy - cy;
+                if (Math.sqrt(dx*dx + dy*dy) < minDist) {
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap) {
+                newMineral = { cx, cy, sizeMult, hueShift, rotJitter, facetSeed: rng };
+                placed = true;
+            }
+            tries++;
+        }
+        // If couldn't place without overlap, just place anyway
+        if (!newMineral) {
+            const rx = nextRand();
+            const ry = nextRand();
+            const sizeMult = 0.3 + nextRand() * 1.7;
+            const hueShift = (nextRand() - 0.5) * 30;
+            const rotJitter = (nextRand() - 0.5) * 0.3;
+            newMineral = {
+                cx: resX/2 + (rx - 0.5) * resX * shapeArea,
+                cy: resY/2 + (ry - 0.5) * resY * shapeArea,
+                sizeMult, hueShift, rotJitter, facetSeed: rng
+            };
+        }
+        mineralsArray.push(newMineral);
     }
     selectedMineral = -1;
 }
@@ -456,9 +1007,14 @@ function hitTestMineralZone(px, py) {
     return null;
 }
 
-function drawMineralOutline(ctx, type, half) {
+function drawMineralOutline(ctx, type, half, outlinePoints) {
     ctx.beginPath();
-    if (type === 'diamond') {
+    if (outlinePoints && outlinePoints.length > 0) {
+        ctx.moveTo(outlinePoints[0].x, outlinePoints[0].y);
+        for (let k = 1; k < outlinePoints.length; k++) {
+            ctx.lineTo(outlinePoints[k].x, outlinePoints[k].y);
+        }
+    } else if (type === 'diamond') {
         ctx.moveTo(0, -half); ctx.lineTo(half, 0); ctx.lineTo(0, half); ctx.lineTo(-half, 0);
     } else if (type === 'square') {
         ctx.rect(-half, -half, half*2, half*2);
@@ -589,12 +1145,13 @@ function generate() {
         generate._noiseCache = { seed, instance: new SimpleNoise(seed) };
     }
     const noise = generate._noiseCache.instance;
-    const noiseKey = [resX, resY, pixelation, scaleInput, octaves, persistence, seed, power, invert, colors.map(c => c.join(',')).join(';')].join(',');
+    const blurAmount = parseFloat(_el('blur').value);
+    const noiseKey = [resX, resY, pixelation, scaleInput, octaves, persistence, seed, power, invert, blurAmount, colors.map(c => c.join(',')).join(';')].join(',');
     if (noiseKey !== lastNoiseKey) {
         lastNoiseKey = noiseKey;
         const imgData = ctx.createImageData(resX, resY);
-        for (let y = 0; y < resY; y += pixelation) {
-            for (let x = 0; x < resX; x += pixelation) {
+        for (let y = 0; y < resY; y++) {
+            for (let x = 0; x < resX; x++) {
                 let noiseValue = 0;
                 let amplitude = 1;
                 let freq = 1 / scaleInput;
@@ -620,19 +1177,66 @@ function generate() {
                 g = (1 - localT) * colors[segment][1] + localT * colors[segment + 1][1];
                 b = (1 - localT) * colors[segment][2] + localT * colors[segment + 1][2];
 
-                // Fill the pixelation x pixelation block
-                for (let dy = 0; dy < pixelation && y + dy < resY; dy++) {
-                    for (let dx = 0; dx < pixelation && x + dx < resX; dx++) {
-                        const index = ((x + dx) + (y + dy) * resX) * 4;
-                        imgData.data[index] = r;
-                        imgData.data[index + 1] = g;
-                        imgData.data[index + 2] = b;
-                        imgData.data[index + 3] = 255;
-                    }
-                }
+                const index = (x + y * resX) * 4;
+                imgData.data[index] = r;
+                imgData.data[index + 1] = g;
+                imgData.data[index + 2] = b;
+                imgData.data[index + 3] = 255;
             }
         }
         ctx.putImageData(imgData, 0, 0);
+
+        // Apply blur before pixelation
+        if (blurAmount > 0) {
+            const pad = Math.ceil(blurAmount * 3);
+            const padW = resX + pad * 2;
+            const padH = resY + pad * 2;
+            if (!generate._blurSrc) generate._blurSrc = document.createElement('canvas');
+            const srcC = generate._blurSrc;
+            if (srcC.width !== padW || srcC.height !== padH) { srcC.width = padW; srcC.height = padH; }
+            const srcCtx = srcC.getContext('2d');
+            srcCtx.clearRect(0, 0, padW, padH);
+            srcCtx.drawImage(canvas, pad, pad);
+            srcCtx.drawImage(canvas, 0, 0, resX, 1, pad, 0, resX, pad);
+            srcCtx.drawImage(canvas, 0, resY-1, resX, 1, pad, pad+resY, resX, pad);
+            srcCtx.drawImage(canvas, 0, 0, 1, resY, 0, pad, pad, resY);
+            srcCtx.drawImage(canvas, resX-1, 0, 1, resY, pad+resX, pad, pad, resY);
+            srcCtx.drawImage(canvas, 0, 0, 1, 1, 0, 0, pad, pad);
+            srcCtx.drawImage(canvas, resX-1, 0, 1, 1, pad+resX, 0, pad, pad);
+            srcCtx.drawImage(canvas, 0, resY-1, 1, 1, 0, pad+resY, pad, pad);
+            srcCtx.drawImage(canvas, resX-1, resY-1, 1, 1, pad+resX, pad+resY, pad, pad);
+            if (!generate._blurDst) generate._blurDst = document.createElement('canvas');
+            const dstC = generate._blurDst;
+            if (dstC.width !== padW || dstC.height !== padH) { dstC.width = padW; dstC.height = padH; }
+            const dstCtx = dstC.getContext('2d');
+            dstCtx.clearRect(0, 0, padW, padH);
+            dstCtx.filter = `blur(${blurAmount}px)`;
+            dstCtx.drawImage(srcC, 0, 0);
+            dstCtx.filter = 'none';
+            ctx.clearRect(0, 0, resX, resY);
+            ctx.drawImage(dstC, pad, pad, resX, resY, 0, 0, resX, resY);
+        }
+
+        // Apply pixelation after blur
+        if (pixelation > 1) {
+            if (!generate._pixSrc) generate._pixSrc = document.createElement('canvas');
+            const pixSrc = generate._pixSrc;
+            if (pixSrc.width !== resX || pixSrc.height !== resY) { pixSrc.width = resX; pixSrc.height = resY; }
+            const pixSrcCtx = pixSrc.getContext('2d');
+            pixSrcCtx.drawImage(canvas, 0, 0);
+            const smallW = Math.max(1, Math.floor(resX / pixelation));
+            const smallH = Math.max(1, Math.floor(resY / pixelation));
+            if (!generate._pixSmall) generate._pixSmall = document.createElement('canvas');
+            const pixSmall = generate._pixSmall;
+            if (pixSmall.width !== smallW || pixSmall.height !== smallH) { pixSmall.width = smallW; pixSmall.height = smallH; }
+            const pixSmallCtx = pixSmall.getContext('2d');
+            pixSmallCtx.drawImage(pixSrc, 0, 0, smallW, smallH);
+            ctx.clearRect(0, 0, resX, resY);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(pixSmall, 0, 0, resX, resY);
+            ctx.imageSmoothingEnabled = true;
+        }
+
         cachedNoiseImageData = ctx.getImageData(0, 0, resX, resY);
     } else {
         ctx.putImageData(cachedNoiseImageData, 0, 0);
@@ -641,7 +1245,7 @@ function generate() {
     // Draw 3D mineral shapes overlay
     const shapesEnabled = _el('shapesEnabled').checked;
     if (shapesEnabled) {
-        const genKey = [seed, _el('shapeCount').value, _el('shapeArea').value, resX, resY, mineralScatterSeed].join(',');
+        const genKey = [_el('shapeCount').value, _el('shapeArea').value, resX, resY, mineralScatterSeed].join(',');
         if (genKey !== lastMineralGenKey) {
             lastMineralGenKey = genKey;
             generateMineralPositions();
@@ -651,10 +1255,8 @@ function generate() {
         const shapeSize = parseInt(_el('shapeSize').value);
         const shapeOpacity = parseInt(_el('shapeOpacity').value) / 100;
         const shapeRotation = parseInt(_el('shapeRotation').value) * Math.PI / 180;
-        const shapeColorHex = _el('shapeColor').value;
         const shapeFacets = parseInt(_el('shapeFacets').value);
         const shapeDepth = parseInt(_el('shapeDepth').value) / 100;
-        const [sR, sG, sB] = hexToRgb(shapeColorHex);
 
         const pixelateMinerals = _el('pixelateMinerals').checked;
         const shouldPixelate = pixelateMinerals && pixelation > 1;
@@ -673,6 +1275,33 @@ function generate() {
             }
         }
 
+        // Material parameters
+        const cmPerlinEnabled = _el('cmPerlinEnabled').checked;
+        let cmNoise = null, cmScale, cmOctaves, cmPersistence, cmPower, cmBlur = 0, cmPixelation = 1, cmColors, customEdges;
+        cmColors = Array.from(document.querySelectorAll('#cm_colorContainer input[type="color"]')).map(inp => hexToRgb(inp.value));
+        if (cmColors.length < 2) cmColors.push(cmColors.length ? cmColors[0] : [0,0,0]);
+        if (shapeType === 'custom') {
+            customEdges = parseInt(_el('customEdges').value) / 100;
+        }
+        if (cmPerlinEnabled) {
+            cmScale = parseFloat(_el('cm_scale').value);
+            cmOctaves = parseInt(_el('cm_octaves').value);
+            cmPersistence = parseFloat(_el('cm_persistence').value);
+            cmPower = parseFloat(_el('cm_power').value);
+            cmBlur = parseFloat(_el('cm_blur').value);
+            cmPixelation = Math.max(1, parseInt(_el('cm_pixelation').value));
+            const cmSeed = parseInt(_el('cm_seed').value);
+            if (!generate._cmNoiseCache || generate._cmNoiseCache.seed !== cmSeed) {
+                generate._cmNoiseCache = { seed: cmSeed, instance: new SimpleNoise(cmSeed) };
+            }
+            cmNoise = generate._cmNoiseCache.instance;
+        }
+        if (!generate._cmTexCanvas) generate._cmTexCanvas = document.createElement('canvas');
+
+        // Compute base material color from cmColors midpoint for facet tinting
+        const cmMidIdx = Math.floor((cmColors.length - 1) / 2);
+        const cmBaseR = cmColors[cmMidIdx][0], cmBaseG = cmColors[cmMidIdx][1], cmBaseB = cmColors[cmMidIdx][2];
+
         // Light direction (top-left)
         const lightX = -0.5, lightY = -0.7, lightZ = 0.5;
         const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
@@ -683,71 +1312,188 @@ function generate() {
             const sizeVar = shapeSize * m.sizeMult;
             const half = sizeVar / 2;
 
+            // For custom shapes, generate outline
+            let customOutline = null;
+            if (shapeType === 'custom') {
+                let facetRng = m.facetSeed;
+                const nextR = () => { facetRng = (facetRng * 1103515245 + 12345) & 0x7fffffff; return facetRng / 0x7fffffff; };
+                customOutline = generateCustomOutline(half, customEdges, nextR);
+                m._customOutline = customOutline;
+            }
+
+            // Compute texture size
+            let maxExt = half;
+            if (customOutline) {
+                maxExt = 0;
+                for (const p of customOutline) maxExt = Math.max(maxExt, Math.abs(p.x), Math.abs(p.y));
+            }
+            const texSize = Math.ceil(maxExt * 2) + 4;
+            const texCanvas = generate._cmTexCanvas;
+            const texCtx = texCanvas.getContext('2d');
+            if (texCanvas.width < texSize || texCanvas.height < texSize) {
+                texCanvas.width = Math.max(texCanvas.width, texSize);
+                texCanvas.height = Math.max(texCanvas.height, texSize);
+            }
+            texCtx.clearRect(0, 0, texSize, texSize);
+            const tcx = texSize / 2, tcy = texSize / 2;
+
+            if (cmPerlinEnabled && cmNoise) {
+                // Per-pixel Perlin noise texture
+                const texImg = texCtx.createImageData(texSize, texSize);
+                const numSeg = cmColors.length - 1;
+                for (let py = 0; py < texSize; py++) {
+                    for (let px = 0; px < texSize; px++) {
+                        const lx2 = px - tcx, ly2 = py - tcy;
+                        const dist = Math.sqrt(lx2*lx2 + ly2*ly2) / maxExt;
+                        const wx = m.cx + lx2, wy = m.cy + ly2;
+                        let nv = 0, amp2 = 1, freq = 1 / cmScale, maxA = 0;
+                        for (let o = 0; o < cmOctaves; o++) {
+                            nv += cmNoise.get(wx * freq, wy * freq) * amp2;
+                            maxA += amp2; freq *= 2; amp2 *= cmPersistence;
+                        }
+                        let t = (nv / maxA) * 0.5 + 0.5;
+                        t = Math.max(0, Math.min(1, t));
+                        t = Math.pow(t, cmPower);
+                        const seg = Math.min(Math.floor(t * numSeg), numSeg - 1);
+                        const lt = (t * numSeg) - seg;
+                        let cr = (1-lt)*cmColors[seg][0] + lt*cmColors[seg+1][0];
+                        let cg = (1-lt)*cmColors[seg][1] + lt*cmColors[seg+1][1];
+                        let cb = (1-lt)*cmColors[seg][2] + lt*cmColors[seg+1][2];
+                        const light = Math.max(0.3, 1 - dist * 0.4);
+                        cr *= light; cg *= light; cb *= light;
+                        const idx = (px + py * texSize) * 4;
+                        texImg.data[idx] = cr; texImg.data[idx+1] = cg;
+                        texImg.data[idx+2] = cb; texImg.data[idx+3] = 255;
+                    }
+                }
+                texCtx.putImageData(texImg, 0, 0);
+
+                // Pixelate texture if needed
+                if (cmPixelation > 1) {
+                    if (!generate._cmPixSmall) generate._cmPixSmall = document.createElement('canvas');
+                    const ps = generate._cmPixSmall;
+                    const sw = Math.max(1, Math.floor(texSize / cmPixelation));
+                    if (ps.width !== sw || ps.height !== sw) { ps.width = sw; ps.height = sw; }
+                    ps.getContext('2d').drawImage(texCanvas, 0, 0, texSize, texSize, 0, 0, sw, sw);
+                    texCtx.clearRect(0, 0, texSize, texSize);
+                    texCtx.imageSmoothingEnabled = false;
+                    texCtx.drawImage(ps, 0, 0, texSize, texSize);
+                    texCtx.imageSmoothingEnabled = true;
+                }
+            } else {
+                // Gradient fill from material colors
+                const grad = texCtx.createLinearGradient(0, 0, texSize, texSize);
+                for (let c = 0; c < cmColors.length; c++) {
+                    const stop = cmColors.length > 1 ? c / (cmColors.length - 1) : 0;
+                    grad.addColorStop(stop, `rgb(${cmColors[c][0]},${cmColors[c][1]},${cmColors[c][2]})`);
+                }
+                texCtx.fillStyle = grad;
+                texCtx.fillRect(0, 0, texSize, texSize);
+            }
+
+            // Mask texture to shape outline
+            texCtx.globalCompositeOperation = 'destination-in';
+            if (customOutline) {
+                texCtx.beginPath();
+                texCtx.moveTo(tcx + customOutline[0].x, tcy + customOutline[0].y);
+                for (let j = 1; j < customOutline.length; j++) texCtx.lineTo(tcx + customOutline[j].x, tcy + customOutline[j].y);
+                texCtx.closePath();
+            } else {
+                texCtx.save();
+                texCtx.translate(tcx, tcy);
+                drawMineralOutline(texCtx, shapeType, half);
+                texCtx.restore();
+            }
+            texCtx.fill();
+            texCtx.globalCompositeOperation = 'source-over';
+
+            // Draw shadow
             drawCtx.save();
             drawCtx.translate(m.cx, m.cy);
             drawCtx.rotate(shapeRotation + m.rotJitter);
-
-            // Drop shadow
-            const shadowOff = half * 0.15 * shapeDepth;
+            const shadowOff = half * 0.1;
             drawCtx.save();
             drawCtx.translate(shadowOff, shadowOff * 1.5);
-            drawCtx.globalAlpha = shapeOpacity * 0.3 * shapeDepth;
+            drawCtx.globalAlpha = shapeOpacity * 0.25;
             drawCtx.fillStyle = 'black';
-            drawCtx.filter = `blur(${Math.max(1, half * 0.15)}px)`;
-            drawMineralOutline(drawCtx, shapeType, half);
+            drawCtx.filter = `blur(${Math.max(1, half * 0.12)}px)`;
+            if (customOutline) {
+                drawCtx.beginPath();
+                drawCtx.moveTo(customOutline[0].x, customOutline[0].y);
+                for (let j = 1; j < customOutline.length; j++) drawCtx.lineTo(customOutline[j].x, customOutline[j].y);
+                drawCtx.closePath();
+            } else {
+                drawMineralOutline(drawCtx, shapeType, half);
+            }
             drawCtx.fill();
             drawCtx.restore();
             drawCtx.filter = 'none';
 
-            // Generate facet vertices (deterministic per mineral)
-            let facetRng = m.facetSeed;
-            const nextRandFacet = () => { facetRng = (facetRng * 1103515245 + 12345) & 0x7fffffff; return facetRng / 0x7fffffff; };
-            const facets = getMineralFacets(shapeType, half, shapeFacets, nextRandFacet, shapeDepth);
+            // Draw textured shape
+            drawCtx.globalAlpha = shapeOpacity;
+            if (cmBlur > 0) drawCtx.filter = `blur(${cmBlur}px)`;
+            drawCtx.drawImage(texCanvas, 0, 0, texSize, texSize, -tcx, -tcy, texSize, texSize);
+            drawCtx.filter = 'none';
 
-            // Draw each facet with lighting
-            for (const facet of facets) {
-                const nx = facet.nx, ny = facet.ny, nz = facet.nz;
-                const dot = Math.max(0, nx*lx + ny*ly + nz*lz);
-                const ambient = 0.25;
-                const diffuse = dot * 0.55;
-                const specPow = 12;
-                const hx = lx, hy = ly, hz = lz + 1;
-                const hLen = Math.sqrt(hx*hx+hy*hy+hz*hz);
-                const specDot = Math.max(0, (nx*hx+ny*hy+nz*hz)/hLen);
-                const specular = Math.pow(specDot, specPow) * 0.7 * shapeDepth;
-                const brightness = Math.min(1, ambient + diffuse);
+            // Draw facets on top for non-custom shapes
+            if (!customOutline) {
+                let facetRng = m.facetSeed;
+                const nextRandFacet = () => { facetRng = (facetRng * 1103515245 + 12345) & 0x7fffffff; return facetRng / 0x7fffffff; };
+                const facets = getMineralFacets(shapeType, half, shapeFacets, nextRandFacet, shapeDepth);
 
-                const noiseVal = noise.get((m.cx + facet.cx) * 0.05, (m.cy + facet.cy) * 0.05);
-                const textureMod = 1 + noiseVal * 0.15 * shapeDepth;
+                // Interpolate color across minerals
+                const tColor = mineralsArray.length > 1 ? i / (mineralsArray.length - 1) : 0;
+                const numSeg = cmColors.length - 1;
+                const cSeg = Math.min(Math.floor(tColor * numSeg), numSeg - 1);
+                const cLt = (tColor * numSeg) - cSeg;
+                const sR = (1-cLt)*cmColors[cSeg][0] + cLt*cmColors[cSeg+1][0];
+                const sG = (1-cLt)*cmColors[cSeg][1] + cLt*cmColors[cSeg+1][1];
+                const sB = (1-cLt)*cmColors[cSeg][2] + cLt*cmColors[cSeg+1][2];
 
-                const fr = Math.max(0, Math.min(255, (sR + m.hueShift) * brightness * textureMod + specular * 255));
-                const fg = Math.max(0, Math.min(255, sG * brightness * textureMod + specular * 255));
-                const fb = Math.max(0, Math.min(255, (sB - m.hueShift * 0.5) * brightness * textureMod + specular * 255));
+                for (const facet of facets) {
+                    const nx = facet.nx, ny = facet.ny, nz = facet.nz;
+                    const dot = Math.max(0, nx*lx + ny*ly + nz*lz);
+                    const ambient = 0.25;
+                    const diffuse = dot * 0.55;
+                    const specPow = 12;
+                    const hx = lx, hy = ly, hz = lz + 1;
+                    const hLen = Math.sqrt(hx*hx+hy*hy+hz*hz);
+                    const specDot = Math.max(0, (nx*hx+ny*hy+nz*hz)/hLen);
+                    const specular = Math.pow(specDot, specPow) * 0.7 * shapeDepth;
+                    const brightness = Math.min(1, ambient + diffuse);
 
-                drawCtx.globalAlpha = shapeOpacity;
-                drawCtx.beginPath();
-                drawCtx.moveTo(facet.pts[0][0], facet.pts[0][1]);
-                for (let p = 1; p < facet.pts.length; p++) drawCtx.lineTo(facet.pts[p][0], facet.pts[p][1]);
-                drawCtx.closePath();
-                drawCtx.fillStyle = `rgb(${Math.round(fr)},${Math.round(fg)},${Math.round(fb)})`;
-                drawCtx.fill();
+                    const noiseVal = noise.get((m.cx + facet.cx) * 0.05, (m.cy + facet.cy) * 0.05);
+                    const textureMod = 1 + noiseVal * 0.15 * shapeDepth;
 
-                drawCtx.strokeStyle = `rgba(0,0,0,${0.2 * shapeDepth})`;
-                drawCtx.lineWidth = 0.5;
-                drawCtx.stroke();
-            }
+                    const fr = Math.max(0, Math.min(255, (sR + m.hueShift) * brightness * textureMod + specular * 255));
+                    const fg = Math.max(0, Math.min(255, sG * brightness * textureMod + specular * 255));
+                    const fb = Math.max(0, Math.min(255, (sB - m.hueShift * 0.5) * brightness * textureMod + specular * 255));
 
-            // Specular highlight on top
-            if (shapeDepth > 0.1) {
-                const highlightR = half * 0.3;
-                const grad = drawCtx.createRadialGradient(-half*0.2, -half*0.3, 0, -half*0.2, -half*0.3, highlightR);
-                grad.addColorStop(0, `rgba(255,255,255,${0.5 * shapeDepth * shapeOpacity})`);
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
-                drawCtx.globalAlpha = 1;
-                drawCtx.fillStyle = grad;
-                drawCtx.beginPath();
-                drawCtx.arc(-half*0.2, -half*0.3, highlightR, 0, Math.PI*2);
-                drawCtx.fill();
+                    drawCtx.globalAlpha = shapeOpacity;
+                    drawCtx.beginPath();
+                    drawCtx.moveTo(facet.pts[0][0], facet.pts[0][1]);
+                    for (let p = 1; p < facet.pts.length; p++) drawCtx.lineTo(facet.pts[p][0], facet.pts[p][1]);
+                    drawCtx.closePath();
+                    drawCtx.fillStyle = `rgb(${Math.round(fr)},${Math.round(fg)},${Math.round(fb)})`;
+                    drawCtx.fill();
+
+                    drawCtx.strokeStyle = `rgba(0,0,0,${0.2 * shapeDepth})`;
+                    drawCtx.lineWidth = 0.5;
+                    drawCtx.stroke();
+                }
+
+                // Specular highlight on top
+                if (shapeDepth > 0.1) {
+                    const highlightR = half * 0.3;
+                    const grad = drawCtx.createRadialGradient(-half*0.2, -half*0.3, 0, -half*0.2, -half*0.3, highlightR);
+                    grad.addColorStop(0, `rgba(255,255,255,${0.5 * shapeDepth * shapeOpacity})`);
+                    grad.addColorStop(1, 'rgba(255,255,255,0)');
+                    drawCtx.globalAlpha = 1;
+                    drawCtx.fillStyle = grad;
+                    drawCtx.beginPath();
+                    drawCtx.arc(-half*0.2, -half*0.3, highlightR, 0, Math.PI*2);
+                    drawCtx.fill();
+                }
             }
 
             drawCtx.restore();
@@ -763,7 +1509,7 @@ function generate() {
             drawCtx.strokeStyle = 'rgba(255,255,255,0.8)';
             drawCtx.lineWidth = 2;
             drawCtx.setLineDash([4, 4]);
-            drawMineralOutline(drawCtx, shapeType, sizeVar/2);
+            drawMineralOutline(drawCtx, shapeType, sizeVar/2, shapeType === 'custom' ? m._customOutline : undefined);
             drawCtx.stroke();
             drawCtx.setLineDash([]);
             drawCtx.restore();
@@ -789,6 +1535,14 @@ function generate() {
         }
 
         drawCtx.globalAlpha = 1;
+    }
+
+    // Apply SVG mask: keep only pixels inside the mask shape
+    if (maskImage) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(maskImage, 0, 0, resX, resY);
+        ctx.restore();
     }
 
     const isInteracting = isDraggingMineral || isResizingMineral || isRotatingMineral;
@@ -836,8 +1590,19 @@ function generate() {
         _allSummaries().forEach(s => s.style.color = contrast);
         const shapesSection = document.querySelector('.shapes-section');
         if (shapesSection) { shapesSection.style.backgroundColor = sectionBg; shapesSection.style.color = contrast; }
-        const shapeSelect = document.getElementById('shapeType');
-        if (shapeSelect) { shapeSelect.style.backgroundColor = sectionBg; shapeSelect.style.borderColor = contrast === 'black' ? '#888' : '#ccc'; shapeSelect.style.color = contrast; }
+        const cmPanel = document.getElementById('customPanel');
+        if (cmPanel) {
+            cmPanel.style.backgroundColor = menuBg;
+            cmPanel.style.color = contrast;
+            cmPanel.style.setProperty('--thumb-color', contrast);
+            const cmColSec = cmPanel.querySelector('.cm-colors-section');
+            if (cmColSec) { cmColSec.style.backgroundColor = sectionBg; cmColSec.style.color = contrast; }
+        }
+        document.querySelectorAll('.controls select').forEach(sel => {
+            sel.style.backgroundColor = sectionBg;
+            sel.style.borderColor = contrast === 'black' ? '#888' : '#ccc';
+            sel.style.color = contrast;
+        });
         _allInputs().forEach(inp => {
             if (inp.type === 'checkbox') {
                 inp.style.accentColor = contrast;
@@ -876,7 +1641,20 @@ document.querySelectorAll('input').forEach(input => {
     }
 });
 
-document.getElementById('shapeType').addEventListener('change', debouncedGenerate);
+document.getElementById('shapeType').addEventListener('change', () => {
+    updateCustomPanelVisibility();
+    debouncedGenerate();
+});
+
+document.getElementById('shapesEnabled').addEventListener('change', () => {
+    updateCustomPanelVisibility();
+    debouncedGenerate();
+});
+
+document.getElementById('cmPerlinEnabled').addEventListener('change', () => {
+    updateCustomPanelVisibility();
+    debouncedGenerate();
+});
 
 const controls = document.querySelector('.controls');
 // Button event listeners
@@ -885,6 +1663,122 @@ document.getElementById('btn-download').addEventListener('click', downloadImage)
 document.getElementById('btn-add-color').addEventListener('click', addColor);
 document.getElementById('btn-remove-color').addEventListener('click', removeColor);
 document.getElementById('btn-scatter').addEventListener('click', scatterMinerals);
+
+// Save/Load state event listeners
+
+document.getElementById('btn-save-state').addEventListener('click', saveStateToFile);
+document.getElementById('btn-load-state').addEventListener('click', loadStateFromFile);
+document.getElementById('maskSelect').addEventListener('change', function() {
+    loadMask(this.value);
+});
+document.getElementById('carousel-plus').addEventListener('click', handleCarouselPlus);
+document.getElementById('carousel-reset-on-new').checked = false;
+
+// Update preview on every generate
+const origGenerate = generate;
+generate = function() {
+    origGenerate.apply(this, arguments);
+    updateCurrentTilePreview();
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(carouselInit, 200);
+});
+
+// Custom Material panel event listeners
+document.getElementById('cm_btn-randomize').addEventListener('click', randomizeCMSeed);
+document.getElementById('cm_btn-add-color').addEventListener('click', addCMColor);
+document.getElementById('cm_btn-remove-color').addEventListener('click', removeCMColor);
+
+// Sync range/number for custom panel
+document.querySelectorAll('#customPanel input[type="range"]').forEach(range => {
+    const num = document.getElementById(range.id + '_num');
+    if (num) {
+        range.addEventListener('input', () => { num.value = range.value; debouncedGenerate(); });
+        num.addEventListener('input', () => { range.value = num.value; debouncedGenerate(); });
+    }
+});
+
+// Color change for custom panel
+document.querySelectorAll('#cm_colorContainer input[type="color"]').forEach(input => {
+    input.addEventListener('change', () => {
+        const label = input.closest('.control-group')?.querySelector('label');
+        if (label) label.textContent = input.value;
+        debouncedGenerate();
+    });
+});
+
+// Custom panel drag
+const customPanelEl = document.getElementById('customPanel');
+let isCMDragging = false;
+let cmDragOffsetX, cmDragOffsetY;
+
+customPanelEl.addEventListener('mousedown', (e) => {
+    if (['INPUT','BUTTON','LABEL','SUMMARY','SELECT'].includes(e.target.tagName)) return;
+    const rect = customPanelEl.getBoundingClientRect();
+    if (e.clientX > rect.right - 16 && e.clientY > rect.bottom - 16) return;
+    if (customPanelEl.style.left === '' || customPanelEl.style.left === 'auto') {
+        const r = customPanelEl.getBoundingClientRect();
+        customPanelEl.style.left = r.left + 'px';
+        customPanelEl.style.top = r.top + 'px';
+        customPanelEl.style.right = 'auto';
+    }
+    isCMDragging = true;
+    cmDragOffsetX = e.clientX - customPanelEl.offsetLeft;
+    cmDragOffsetY = e.clientY - customPanelEl.offsetTop;
+    customPanelEl.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isCMDragging) {
+        customPanelEl.style.left = Math.max(-customPanelEl.offsetWidth + 40, Math.min(window.innerWidth - 40, e.clientX - cmDragOffsetX)) + 'px';
+        customPanelEl.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - cmDragOffsetY)) + 'px';
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    if (isCMDragging) {
+        isCMDragging = false;
+        customPanelEl.style.cursor = 'grab';
+    }
+});
+
+// Custom panel touch drag
+customPanelEl.addEventListener('touchstart', (e) => {
+    if (['INPUT','BUTTON','LABEL','SUMMARY','SELECT'].includes(e.target.tagName)) return;
+    const touch = e.touches[0];
+    if (customPanelEl.style.left === '' || customPanelEl.style.left === 'auto') {
+        const r = customPanelEl.getBoundingClientRect();
+        customPanelEl.style.left = r.left + 'px';
+        customPanelEl.style.top = r.top + 'px';
+        customPanelEl.style.right = 'auto';
+    }
+    isCMDragging = true;
+    cmDragOffsetX = touch.clientX - customPanelEl.offsetLeft;
+    cmDragOffsetY = touch.clientY - customPanelEl.offsetTop;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (isCMDragging) {
+        const touch = e.touches[0];
+        customPanelEl.style.left = Math.max(-customPanelEl.offsetWidth + 40, Math.min(window.innerWidth - 40, touch.clientX - cmDragOffsetX)) + 'px';
+        customPanelEl.style.top = Math.max(0, Math.min(window.innerHeight - 40, touch.clientY - cmDragOffsetY)) + 'px';
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+    if (isCMDragging) isCMDragging = false;
+});
+
+// Edges slider sync
+const edgesRange = document.getElementById('customEdges');
+const edgesNum = document.getElementById('customEdges_num');
+edgesRange.addEventListener('input', () => { edgesNum.value = edgesRange.value; debouncedGenerate(); });
+edgesNum.addEventListener('input', () => { edgesRange.value = edgesNum.value; debouncedGenerate(); });
+
+// Initial visibility
+updateCustomPanelVisibility();
 
 // Panel drag state
 let isPanelDragging = false;
