@@ -9,20 +9,31 @@
     <title>Perlynx</title>
     <link rel="icon" id="favicon" type="image/png">
     <style>
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #1a1a1a; color: black; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        /* ── Scrollbars ─────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.28); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.5); }
+        * { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.28) transparent; }
+        #carousel-list::-webkit-scrollbar { height: 4px; }
+        #carousel-list { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.25) transparent; overflow-x: hidden; }
+        #carousel-list.needs-scroll { overflow-x: auto; }
+        /* ─────────────────────────────────────────────────────── */
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #3a3a3a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         h1 { -webkit-background-clip: text; background-clip: text; color: transparent; background-size: cover; }
-        .controls { position: fixed; top: 20px; left: 20px; z-index: 10; background: #f7f7f7; padding: 10px; border-radius: 12px; width: 260px; min-width: 180px; max-height: calc(100vh - 40px); display: grid; grid-template-columns: 1fr; gap: 8px; color: black; overflow: auto; transition: border-radius 0.25s, padding 0.25s, width 0.25s; resize: both; }
+        .texture-text { -webkit-background-clip: text; background-clip: text; color: transparent; background-size: cover; display: inline; }
+        .controls { position: fixed; top: 20px; left: 20px; z-index: 10; background: #2c2c2c; padding: 10px; border-radius: 12px; width: 260px; min-width: 180px; max-height: calc(100vh - 40px); display: grid; grid-template-columns: 1fr; gap: 8px; color: white; overflow: auto; transition: border-radius 0.25s, padding 0.25s, width 0.25s; resize: both; }
         .sliders-section { margin-bottom: 10px; }
-        .sliders-section[open] { border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-        .colors-section { background: #e7e7e7; padding: 10px; border-radius: 8px; }
-        .shapes-section { background: #e7e7e7; padding: 10px; border-radius: 8px; }
+        .sliders-section[open] { border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .colors-section { background: #3a3a3a; padding: 10px; border-radius: 8px; }
+        .shapes-section { background: #3a3a3a; padding: 10px; border-radius: 8px; }
         .controls summary { cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 2px 0; user-select: none; list-style: none; }
         .controls summary::-webkit-details-marker { display: none; }
         .controls summary::before { content: ''; display: inline-block; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; border-bottom: none; margin-right: 4px; vertical-align: middle; }
         .controls details:not([open]) > summary::before { border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid currentColor; border-right: none; }
         .controls details { display: grid; gap: 8px; }
-        .shapes-section select { flex: 1; background: #e7e7e7; border: 1px solid #bbb; border-radius: 4px; padding: 2px; font-size: 11px; }
-        label { font-size: 12px; margin-bottom: 5px; color: black; text-transform: uppercase; letter-spacing: 1px; }
+        .shapes-section select { flex: 1; background: #3a3a3a; border: 1px solid #555; border-radius: 4px; padding: 2px; font-size: 11px; }
+        label { font-size: 12px; margin-bottom: 5px; color: white; text-transform: uppercase; letter-spacing: 1px; }
         .control-group { display: flex; flex-direction: column; align-items: center; width: 100%; }
         .color-inputs { display: flex; flex-direction: column; gap: 10px; }
         .color-buttons { display: flex; gap: 10px; justify-content: center; }
@@ -33,13 +44,13 @@
         .input-row input[type="range"] { flex: 1; min-width: 60px; background: transparent; }
         .input-row input[type="number"],
         .input-row input[type="color"],
-        .input-row input[type="checkbox"] { width: 44px; flex-shrink: 0; background: #e7e7e7; border: 1px solid #bbb; color: black; }
+        .input-row input[type="checkbox"] { width: 44px; flex-shrink: 0; background: #3a3a3a; border: 1px solid #555; color: white; }
         .input-row input[type="checkbox"] { width: auto; }
         input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 4px; background: #bbb; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--thumb-color, black); margin-top: -4px; }
         input[type="range"]::-moz-range-track { height: 6px; border-radius: 4px; background: #bbb; }
         input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--thumb-color, black); }
-        button { padding: 6px 10px; border: none; border-radius: 6px; color: black; font-weight: bold; cursor: pointer; transition: 0.2s; background-size: cover; background-position: center; font-size: 11px; }
+        button { padding: 6px 10px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; background-size: cover; background-position: center; font-size: 11px; background-color: #3a3a3a; }
         button:hover { opacity: 0.9; }
         #menu-toggle { position: absolute; right: 6px; top: 6px; transform: none; padding: 0 !important; width: 22px; height: 22px; font-size: 16px; background: transparent !important; background-image: none !important; border-radius: 50% !important; display: flex; align-items: center; justify-content: center; opacity: 0.4; color: inherit; }
         #menu-toggle:hover { opacity: 1 !important; }
@@ -47,7 +58,9 @@
         .controls.collapsed > *:not(#main-header) { display: none !important; }
         .controls.collapsed #main-header { padding: 0 !important; margin: 0 !important; border-bottom: none !important; justify-content: center; }
         .controls.collapsed h1, .controls.collapsed #menu-toggle { display: none; }
-        canvas { background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #canvas { background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #canvas.no-shadow { box-shadow: none; }
+        #mask-overlay { background: transparent; }
         .custom-controls { position: fixed; top: 20px; right: 20px; z-index: 10; background: #f7f7f7; padding: 10px; border-radius: 12px; width: 260px; min-width: 180px; max-height: calc(100vh - 40px); display: grid; grid-template-columns: 1fr; gap: 8px; color: black; overflow: auto; resize: both; cursor: grab; }
         .custom-controls summary { cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 2px 0; user-select: none; list-style: none; }
         .custom-controls summary::-webkit-details-marker { display: none; }
@@ -58,30 +71,488 @@
         #cm_colorContainer { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         #cm_colorContainer .control-group { align-items: center; width: auto; flex: 0 0 auto; }
         #cm_colorContainer .control-group label { font-size: 10px; user-select: text; cursor: text; }
+        /* Mask Editor Overlay */
+        #canvas-wrapper { position: relative; display: inline-block; line-height: 0; }
+        #mask-overlay { position: absolute; top: 0; left: 0; pointer-events: none; touch-action: none; }
+        /* Workspace: hosts main canvas + all spawned tile instances */
+        #workspace { position: relative; display: inline-block; transform-origin: 0 0; }
+        .spawned-tile { position: absolute; cursor: grab; user-select: none; z-index: 5; }
+        .spawned-tile canvas { display: block; box-shadow: 0 6px 24px rgba(0,0,0,0.55); }
+        .spawned-tile canvas.no-shadow { box-shadow: none; }
+        .spawned-tile.snap-active { outline: 2px solid rgba(64,180,255,0.85); outline-offset: -1px; }
+        .spawned-tile .tile-close {
+            position: absolute; top: -9px; right: -9px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #c33; color: white; border: 2px solid white;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0; line-height: 1; z-index: 6;
+            opacity: 0; transition: opacity 0.15s;
+        }
+        .spawned-tile:hover .tile-close,
+        .spawned-tile.touch-active .tile-close { opacity: 1; }
+
+        /* ── Help Modal ───────────────────────────────────────────── */
+        #help-backdrop {
+            position: fixed; inset: 0; z-index: 99998;
+            background: rgba(0,0,0,0.72);
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px; box-sizing: border-box;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.22s;
+        }
+        #help-backdrop.visible { opacity: 1; pointer-events: all; }
+        #help-modal {
+            background: #1e1e1e; color: #e8e8e8;
+            border-radius: 16px; max-width: 720px; width: 100%;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+            transform: translateY(20px);
+            transition: transform 0.22s;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        #help-backdrop.visible #help-modal { transform: translateY(0); }
+        #help-modal-header {
+            position: sticky; top: 0; z-index: 2;
+            background: #161616;
+            padding: 18px 24px 14px;
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
+            border-radius: 16px 16px 0 0;
+        }
+        #help-modal-header h2 {
+            margin: 0; font-size: 18px; font-weight: 700; color: #fff;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #btn-help-close {
+            background: #333; border: 1px solid #555; color: #ccc;
+            width: 30px; height: 30px; border-radius: 50%; font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; padding: 0; transition: background 0.15s;
+        }
+        #btn-help-close:hover { background: #c33; color: #fff; border-color: #c33; }
+        #help-modal-body { padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 22px; font-size: 12px; color: #bbb; font-family: system-ui, sans-serif; line-height: 1.6; }
+        .help-section {
+            background: #272727; border-radius: 12px; padding: 16px 18px;
+            border: 1px solid #333;
+        }
+        .help-section-title {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #888; margin: 0 0 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .help-section-title svg { flex-shrink: 0; }
+        .help-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+        .help-row:last-child { margin-bottom: 0; }
+        .help-icon {
+            flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px;
+            background: #333; display: flex; align-items: center; justify-content: center;
+            font-size: 15px; color: #aaa; font-family: system-ui, sans-serif;
+        }
+        .help-text { flex: 1; font-size: 12px; color: #bbb; line-height: 1.6; }
+        .help-text > strong { color: #ccc; font-weight: 600; display: block; margin-bottom: 3px; }
+        .help-text span strong { display: inline; font-weight: 600; color: #ccc; }
+        .help-text span { color: #bbb; line-height: 1.6; }
+        .help-diagram {
+            margin: 10px 0 4px;
+            border-radius: 8px; overflow: hidden; background: #1a1a1a;
+            border: 1px solid #3a3a3a;
+        }
+        .help-tip {
+            background: #1a2a1a; border: 1px solid #3a5a3a; border-radius: 8px;
+            padding: 10px 14px; font-size: 12px; color: #9dcc9d;
+            display: flex; align-items: flex-start; gap: 8px; margin-top: 4px;
+        }
+        .help-tip-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+        #btn-help-trigger {
+            background: transparent !important; background-image: none !important;
+            border: 2px solid currentColor !important; border-radius: 50% !important;
+            width: 20px !important; height: 20px !important;
+            font-size: 12px !important; font-weight: 700 !important;
+            padding: 0 !important; opacity: 0.82; flex-shrink: 0;
+            display: inline-flex !important; align-items: center; justify-content: center;
+            cursor: pointer; transition: opacity 0.15s;
+        }
+        #btn-help-trigger:hover { opacity: 1 !important; }
     </style>
+    <script data-goatcounter="https://pirate-bytes.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
     <noscript><p style="color:white;text-align:center">JavaScript is required to run Perlynx.</p></noscript>
 
-    <div id="carousel-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:12px; background:#f7f7f7; border-radius:16px; padding:8px 16px; box-shadow:0 2px 16px rgba(0,0,0,0.12); min-height:64px;">
-        <div id="carousel-list" style="display:flex; align-items:center; gap:10px;"></div>
+    <div id="carousel-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:12px; background:#2c2c2c; border-radius:16px; padding:8px 16px; box-shadow:0 2px 16px rgba(0,0,0,0.12); min-height:64px;">
+        <div id="carousel-list" style="display:flex; align-items:center; gap:10px; max-width:460px; padding-bottom:4px;"></div>
         <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
             <button id="carousel-plus" title="Add new tile" style="width:44px; height:44px; border-radius:50%; font-size:28px; background:#e7e7e7; color:#333; border:2px solid #bbb; display:flex; align-items:center; justify-content:center;">+</button>
             <label style="font-size:10px; color:#333;">New</label>
         </div>
-        <div style="display:flex; flex-direction:column; align-items:center; margin-left:16px;">
-            <label style="font-size:11px; color:#333; margin-bottom:2px;">
+        <div style="display:flex; flex-direction:column; align-items:center; margin-left:16px; gap:3px;">
+            <label style="font-size:11px; color:#333;">
                 <input type="checkbox" id="carousel-reset-on-new" style="vertical-align:middle; margin-right:2px;">Reset state on new tile
             </label>
         </div>
     </div>
-    <canvas id="canvas"></canvas>
+    <div id="workspace">
+        <div id="canvas-wrapper">
+            <canvas id="canvas"></canvas>
+            <canvas id="mask-overlay" width="1" height="1"></canvas>
+        </div>
+    </div>
+
+    <!-- ── Help / README Modal ──────────────────────────────────── -->
+    <div id="help-backdrop">
+        <div id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <div id="help-modal-header">
+                <h2 id="help-title">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="10" stroke="#7ec8e3" stroke-width="1.5"/>
+                        <text x="11" y="16" text-anchor="middle" font-size="13" font-weight="bold" fill="#7ec8e3" font-family="system-ui">?</text>
+                    </svg>
+                    Perlynx — Quick Guide
+                </h2>
+                <button id="btn-help-close" title="Close help">&#x2715;</button>
+            </div>
+            <div id="help-modal-body">
+
+                <!-- OVERVIEW -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="36" height="36" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg"><g fill="url(#perlin-fill)"><path d="M 382.035 274.794 C 385.021 277.783 396.486 305.385 399.778 311.508 C 408.372 327.496 458.095 406.617 469.444 412.529 C 469.945 408.281 463.678 401.96 462.478 396.935 C 457.306 375.272 451.3 360.875 449.514 338.263 C 474.633 383.717 507.855 429.851 540.94 469.993 C 580.871 518.441 643.85 563.467 699.852 591.535 C 770.725 627.055 840.382 652.396 905.361 699.261 C 897.271 690.683 889.019 681.412 879.881 674.01 C 874.202 669.41 868.579 667.602 863.25 662.661 C 870.481 657.895 894.556 656 904.704 654.336 C 993.7 639.746 1080.33 642.202 1168.81 658.801 C 1172.36 659.469 1176.19 659.787 1178.27 662.741 C 1173.2 667.205 1146.39 689.74 1146.43 695.309 C 1150.33 693.608 1164.63 681.96 1170.08 678.453 C 1222.16 644.955 1279.47 624.255 1334.71 597.011 C 1414.2 557.798 1485.99 502.707 1536.95 429.477 C 1557.93 399.315 1578.34 368.466 1599.08 337.994 C 1592.91 366.908 1589.14 390.057 1574.3 416.517 C 1608.82 378.644 1642.9 317.705 1666.63 272.43 C 1658.12 326.129 1648.33 371.188 1616.67 417.42 C 1636.72 398.903 1650.05 384.842 1667.29 363.356 C 1653.49 410.552 1631.71 445.332 1598.33 481.054 C 1589.43 490.578 1580.18 501.087 1569.42 508.606 C 1571.57 523.717 1572.77 541.829 1573.51 557.028 C 1577.21 627.593 1566.59 698.175 1542.32 764.535 C 1530.35 797.929 1522.9 818.37 1498.35 845.449 C 1503.22 834.151 1506.1 818.24 1510.06 806.046 C 1516.6 785.902 1523.73 765.409 1529.28 745.052 C 1544.98 687.437 1551.37 629.169 1549.65 569.541 C 1549.22 554.547 1548.24 521.399 1543.93 507.933 C 1494.78 542.974 1453.18 578.999 1413.41 624.7 C 1374.1 669.875 1347.62 720.258 1310.01 765.904 C 1307.3 770.897 1330.69 783.855 1334.58 786.379 C 1382.28 817.35 1450.4 880.09 1467.09 935.135 C 1457.78 924.634 1411 888.471 1397.41 886.497 L 1396.67 887.165 C 1403.03 890.438 1412.25 903.43 1418.93 909.01 C 1444.6 930.484 1468.92 958.596 1494.53 979.413 C 1493.33 973.604 1492.75 967.311 1492.17 961.375 C 1489.33 932.47 1477.94 907.458 1468.73 880.203 C 1535.37 942.763 1574.63 1053.86 1586.77 1142.8 C 1549.86 1081.83 1488.87 1014.06 1428.7 976.567 C 1439.13 987.207 1448.75 1000.8 1458.54 1012.16 C 1527.38 1091.98 1580.05 1215.19 1547.55 1322.09 C 1547.05 1317.38 1546.44 1312.68 1545.7 1307.99 C 1534.86 1237.91 1506.1 1181.91 1462.41 1126.25 C 1452.8 1114.01 1442.48 1101.51 1429.94 1092.32 C 1440.05 1106.23 1458.5 1146.45 1464.94 1163.24 C 1501.11 1257.47 1501.3 1359.9 1462.72 1452.8 C 1445.19 1403.09 1429.45 1373.15 1390.5 1336.33 C 1398.46 1365.65 1403.73 1394.17 1403.49 1424.73 C 1403.35 1441.52 1401.42 1459.98 1401.98 1476.52 L 1402.04 1478.27 C 1378.45 1421.87 1341.61 1371.99 1294.64 1332.84 C 1308.5 1337.05 1323.35 1340.26 1337.08 1344.98 C 1345.36 1347.83 1354.99 1352.75 1363.1 1356.55 C 1342.99 1318.65 1335.4 1309.83 1306.98 1278.27 C 1333.92 1279.82 1373.24 1288.25 1395.78 1304.13 C 1380.17 1281.55 1355.41 1263.55 1331.47 1250.93 C 1273.28 1227.91 1217.85 1236.88 1173.96 1256.22 C 1194.22 1253.14 1225.12 1250.05 1244.99 1251.41 C 1218.37 1275.43 1212.5 1279.53 1177.55 1287.8 C 1195.89 1288.52 1213.24 1284.88 1233.18 1287.5 C 1245.47 1289.12 1262.41 1295.18 1272.38 1295.77 C 1266.14 1289.35 1256.73 1281.46 1249.81 1275.58 C 1292.21 1282.75 1311.29 1306.05 1337.53 1336.03 C 1322.33 1334.11 1318.42 1329.98 1304.93 1324.34 C 1275.98 1312.25 1241.41 1296.53 1209.36 1303.18 C 1186.89 1307.84 1168.38 1324.54 1145.61 1328.8 C 1111.04 1336.07 1071.97 1322.17 1042.34 1305.05 C 1034.72 1300.65 1022.86 1290.03 1032 1281.22 C 1052.53 1261.42 1081.46 1249.66 1100.51 1228.23 C 1110 1217.56 1114.44 1192.18 1112.71 1178.33 C 1109.24 1183.57 1108.72 1202.46 1102.41 1208.37 C 1099.25 1208.44 1092.32 1205.3 1089.78 1203.99 C 1066.99 1190.95 1046.56 1207.79 1024.46 1208.63 C 1008.06 1209.26 987.113 1196 969.049 1200.25 C 965.383 1201.11 945.89 1210.34 944.395 1208.92 C 937.821 1202.67 934.802 1185.07 932.602 1176.17 C 931.459 1186.53 932.531 1190.38 933.643 1200.29 C 937.394 1239.28 976.036 1251.8 1002.47 1273.24 C 1008.87 1278.43 1018.76 1286.95 1012.06 1295.96 C 1004.89 1305.6 986.888 1312.98 975.952 1317.19 C 949.716 1327.28 920.374 1337.41 892.632 1327.08 C 867.533 1317.66 845.198 1299.05 817.005 1301.21 C 779.908 1304.05 743.961 1330.43 708.78 1337.29 C 736.738 1305.52 753.311 1280.9 799.519 1276.16 C 792.081 1280.81 782.385 1291.15 775.669 1297.57 C 799.993 1288.06 814.952 1286.14 841.459 1286.67 C 848.101 1286.8 856.77 1288.36 862.832 1287.7 C 860.397 1285.27 851.797 1284.61 847.27 1282.88 C 827.007 1275.14 815.513 1266.56 802.513 1249.72 C 829.717 1253.31 844.706 1250.88 873.876 1258.2 C 824.474 1227.27 748.283 1229.52 700.744 1261.34 C 682.515 1273.54 668.606 1282.68 656.678 1301.15 C 678.592 1286.78 714.701 1278.54 740.94 1278.33 C 731.55 1289.54 721.352 1298.72 711.958 1310.47 C 699.344 1326.25 691.585 1342.77 681.955 1360.44 C 689.546 1356.63 697.113 1351.27 704.73 1347.29 C 718.954 1339.85 734.873 1337.15 750.541 1334.88 C 742.984 1342.09 734.025 1349 726.801 1356.32 C 697.5 1386.01 660.352 1437.02 646.912 1476.11 C 640.993 1440.87 643.142 1371.01 656.67 1337.8 C 615.543 1380.48 603.107 1397.35 584.953 1454.74 C 576.687 1439.59 569.057 1406.66 565.262 1389.45 C 548.847 1315.02 558.76 1231.25 585.552 1160.42 C 594.663 1136.34 603.205 1116.16 617.613 1094.31 C 568.59 1140.6 540.42 1196.45 518.221 1258.94 C 513.453 1272.36 510.327 1305.54 505.711 1314.6 C 502.677 1310.96 501.515 1303.43 500.821 1298.73 C 486.78 1203.67 515.876 1112.97 571.208 1035.78 C 579.188 1024.64 587.477 1013.24 595.964 1002.44 C 602.103 994.628 609.145 987.226 615.034 979.216 L 615.679 978.327 C 562.784 1009.79 517.728 1061.64 482.92 1111.91 C 474.386 1124.24 466.812 1134.28 461.353 1148.32 C 463.583 1139.14 464.258 1129.64 466.021 1120.33 C 482.822 1031.69 511.034 945.702 576.871 881.075 C 575.017 890.856 572.593 897.637 569.163 906.952 C 560.794 929.682 553.003 957.121 551.48 981.239 C 559.925 975.675 566.106 967.91 573.249 960.706 L 616.321 917.361 C 627.52 905.952 639.727 895.281 651.172 883.673 C 629.046 897.144 605.378 910.155 585.88 927.206 C 579.015 907.751 658.385 826.679 676.78 811.13 C 696.536 794.433 719.872 780.323 742.383 768.154 C 723.76 753.026 703.943 716.03 689.742 695.668 C 672.758 671.315 656.56 647.86 636.836 625.422 C 611.452 596.049 583.604 568.9 553.595 544.27 C 539.486 532.711 515.132 516.3 503.563 504.371 C 493.102 602.313 500.746 687.114 528.308 781.581 C 534.41 802.496 546.291 828.914 550.494 848.202 L 550.889 850.087 C 543.09 839.407 533.983 827.444 527.499 815.781 C 485.158 739.624 471.013 638.462 472.951 552.083 C 473.187 541.558 474.647 517.945 477.217 508.61 C 443.214 478.479 408.051 439.649 390.074 397.861 C 385.609 387.481 381.779 374.833 378.079 363.965 C 394.394 380.592 413.575 411.387 433.971 422.989 C 409.017 390.618 393.304 347.621 385.824 307.79 C 384.19 299.087 381.43 283.522 382.035 274.794 z"/><path d="M 1295.88 983.464 C 1321.69 971.193 1333.84 970.437 1359.65 964.739 C 1346.31 963.463 1319.08 963.708 1305.44 964.409 C 1222.85 970.402 1142.91 998.69 1111.32 1083.56 C 1109.79 1087.67 1108.9 1095.9 1108.2 1100.44 L 1108.56 1101.43 L 1109.56 1100.12 C 1131.52 1071.75 1156.22 1063.43 1190.31 1068.99 C 1210.76 1072.32 1235.55 1066.81 1253.9 1057.1 C 1263.15 1051.64 1270.6 1047.03 1278.08 1039.44 C 1298.49 1018.71 1306.79 1004.75 1339.51 1013.71 C 1357.46 1018.63 1381.03 1026.73 1397.63 1035.51 C 1403.05 1038.38 1403.28 1040.11 1409.74 1040.63 C 1408.69 1039.02 1398.03 1031.8 1395.4 1029.8 C 1376.09 1015.17 1352.68 1002.94 1329.88 994.56 C 1318.83 990.495 1306.78 988.213 1295.88 983.464 z"/><path d="M 749.123 982.415 C 730.043 985.971 652.397 1023.46 643.734 1038.4 L 644.162 1039.44 C 648.745 1037.99 650.929 1036 672.82 1023.7 C 710.31 1008.81 735.557 1011.7 753.451 1013.74 C 763.386 1031.44 774.408 1041.37 797.514 1062.19 C 819.98 1068.77 849.962 1068.94 860.152 1068.51 C 870.59 1066.69 880.652 1067.99 907.687 1071.48 C 926.645 1089.09 942.184 1109.84 924.376 1055.68 C 910.861 1021.49 856.929 993.581 808.591 968.571 C 742.564 959.452 688.14 964.591 L 689.963 965.095 C 712.361 971.145 725.903 973.078 749.123 982.415 z"/><path d="M 738.824 1185.39 C 696.755 1192.6 665.863 1207.33 635.161 1238.01 C 637.467 1223.74 641.202 1218.96 648.061 1206.45 C 619.2 1231.32 602.502 1267.72 594.978 1304.31 C 616.285 1277.99 662.106 1230.73 692.416 1218.05 C 718.378 1206.48 734.635 1201.98 763.6 1203.01 C 755.292 1207.05 727.233 1220.17 721.622 1224.75 L 721.861 1225.91 C 732.366 1226.24 742.866 1224.38 753.375 1224.11 C 768.635 1223.71 785.366 1224.85 800.577 1226.69 C 800.691 1220.24 800.073 1210.91 804.606 1206.07 C 819.015 1190.69 852.723 1213.13 867.857 1216.25 C 847.316 1200.83 835.59 1192.61 811.091 1185.13 C 826.085 1167.25 838.013 1165.4 858.883 1159.56 C 835.423 1159.06 817.852 1163.7 795.603 1170.88 C 769.079 1163.02 733.203 1153.13 705.234 1157.42 C 695.801 1158.19 671.38 1162.74 663.331 1166.72 L 662.174 1168.38 C 684.38 1171.07 703.541 1173.98 720.783 1178.09 738.824 1185.39 z"/><path d="M 888.633 865.718 C 897.318 884.426 906.157 911.188 913.18 930.824 C 922.741 957.554 926.337 985.398 942.253 1010.09 C 937.882 995.134 937.645 988.164 936.593 972.75 C 936.661 966.624 938.16 966.08 940.333 960.291 L 941.252 961.324 C 946.003 966.737 953.609 977.026 928.573 921.425 C 918.13 902.193 905.272 879.98 888.633 865.718 z"/><path d="M 1109.91 973.912 C 1109.57 981.825 1109.38 988.149 1108.28 995.964 C 1108.02 997.787 1107.78 999.614 1107.56 1001.44 C 1114.08 997.063 1137.11 909.421 1143.88 898.276 C 1156.7 870.601 1157.48 868.595 L 1156.89 868.033 C 1133.83 889.992 1098.09 950.761 1091.84 981.405 C 1096 975.6 1101.52 963.51 1106.31 962.569 C 1109.18 965.112 1109.38 970.028 1109.91 973.912 z"/><path d="M 1184.82 776.546 C 1188.81 773.529 1193.81 769.515 1197.9 766.844 C 1202.22 763.781 1208.61 760.676 L 1211.01 761.098 C 1212.39 764.528 1210.99 769.25 L 1211.73 769.332 C 1224.52 756.112 1226.64 746.773 1243.9 734.704 C 1242.91 733.713 1242.41 733.781 C 1216.43 746.11 1203.19 753.54 1184.82 776.546 z"/><path d="M 1285.9 1202.91 C 1322.95 1202.41 1344.75 1210.12 1375.63 1230.91 C 1393.89 1243.49 1407.83 1253.86 1423.59 1269.71 C 1433.13 1279.32 1442.28 1289.99 1451.91 1299.23 C 1441.5 1263.05 1429.68 1231.64 1400.44 1207.07 C 1405.48 1217.95 1415.2 1240.71 C 1380.93 1212.1 1353.85 1189.31 1306.02 1185.15 C 1331.18 1174.76 1365.53 1166.67 1392.69 1170.3 C 1371.89 1159.08 1335.45 1154.01 1312.66 1157.39 C 1300.61 1158.88 1287.38 1160.57 1275.74 1163.84 C 1267.48 1166.16 1260.39 1169.08 1251.89 1171.27 C 1229.57 1166.14 1219.29 1158.18 1193.18 1160.4 C 1216.21 1166.99 1241.99 1183.77 C 1221.67 1191.67 1195.48 1200.61 1180.74 1216.73 C 1193.61 1209.86 1205.58 1205.19 1219.82 1202.12 C 1244.87 1196.71 1248.88 1226.96 C 1268.61 1221.85 1312.8 1222.56 1332.09 1229.56 C 1314.64 1217.86 1303.42 1212.73 1285.9 1202.91 z"/><path d="M 852.178 771.18 L 854.634 771.547 C 842.152 752.886 822.603 737.795 801.123 731.009 C 810.47 738.969 826.364 756.111 C 828.761 759.039 832.934 765.987 L 836.34 760.037 C 841.541 762.577 847.66 767.461 852.178 771.18 z"/><path d="M 746.247 883.895 C 754.356 890.529 808.599 926.008 816.323 929.14 C 805.952 913.403 764.933 886.504 746.247 883.895 z"/><path d="M 1236.37 927.094 C 1257.87 912.556 1273.22 904.383 1295.72 887.703 C 1268.47 898.647 1257.1 905.54 1235.67 925.782 C 1236.09 926.976 1236.37 927.094 z"/><path d="M 1235.08 993.141 C 1249.5 992.693 1255.61 993.163 1269.54 996.373 C 1262.54 1043.88 1219.58 1075.78 1173.63 1053.72 C 1163.84 1048.52 1158.8 1045.85 1151.2 1037.85 C 1163.05 1031.48 1176.01 1019.17 1189.69 1015.91 C 1194.02 1024.34 1198.43 1046.23 1214.04 1033.67 C 1224.81 1025.01 1225.51 1008.22 1226.12 995.852 L 1235.08 993.141 z"/><path d="M 798.23 993.187 C 801.299 993.026 817.361 992.279 818.072 994.619 C 826.058 1020.9 832.489 1068.23 858.852 1015.31 C 872.506 1022.25 881.153 1028.29 893.545 1037.03 C 889.765 1041.69 888.262 1042.73 883.153 1045.88 C 857.895 1060.02 846.553 1065.52 817.435 1054.56 C 799.351 1047.75 789.335 1035.41 781.323 1018.3 C 779.027 1013.4 774.719 1003.96 776.546 998.956 C 781.011 996.091 792.505 994.353 798.23 993.187 z"/><path d="M 1015 1324.42 C 1044.55 1321.34 1080.74 1337.6 1111.29 1341.28 C 1132.52 1343.84 1148.62 1343.07 1169.82 1342.87 C 1162.28 1348.98 1158.2 1357.94 1152.68 1365.77 C 1137.83 1386.83 1119.88 1414.57 1097.38 1427.43 C 1099.93 1417.28 1103.4 1406.55 1106.46 1396.48 C 1089.69 1418.02 1049.36 1450.99 1020.98 1450.73 C 1000.31 1447.55 968.81 1427.28 953.996 1412.41 C 947.079 1405.47 941.419 1398.29 934.565 1391.45 C 939.022 1401.86 945.027 1414.55 948.152 1425.13 C 918.03 1407.98 893.994 1369.46 873.671 1342.75 C 893.097 1343.75 928.388 1344 946.719 1340 C 971.901 1334.5 988.143 1326.66 1015 1324.42 z"/><path d="M 526.627 538.582 C 530.23 541.176 551.201 570.319 555.471 575.654 L 660.275 705.04 C 667.165 713.644 696.5 752.372 701.48 756.491 C 683.664 752.902 639.018 729.83 625.11 718.097 C 646.554 751.109 681.86 787.581 C 657.427 786.356 632.966 779.169 610.713 769.273 C 632.362 793.779 654.715 804.35 C 649.277 811.425 641.204 817.648 634.732 825.593 C 629.662 830.697 622.137 841.949 616.279 848.492 C 598.74 833.832 579.419 810.138 571.153 788.439 C 582.333 791.852 594.207 794.257 604.77 797.769 C 587.946 783.247 566.581 756.843 554.999 737.813 C 552.406 733.554 542.784 711.011 C 558.904 717.972 575.425 729.118 590.825 736.824 C 580.111 721.659 C 557.77 688.404 527.244 645.222 526.818 604.199 C 541.018 624.14 568.215 645.039 C 553.802 624.295 C 537.426 597.737 524.406 570.369 526.627 538.582 z"/><path d="M 1524.62 538.886 C 1525.2 542.438 1522.83 552.186 1522 556.081 C 1515.35 587.026 1500.02 628.625 1476.01 649.866 C 1490.61 643.11 1522.04 605.135 C 1519.05 638.435 1474.72 707.998 C 1469.31 715.759 1460.5 723.175 1456.36 731.497 L 1456.86 732.489 C 1463.49 731.667 1503.05 709.442 L 1504.27 710.305 C 1504.09 714.506 C 1493.58 739.966 1461.8 784.942 1439.55 798.949 C 1449.48 795.212 1471.94 789.228 L 1473.07 790.251 C 1429.41 846.726 C 1424.23 840.291 1416.35 830.279 C 1410.44 823.335 1399.12 812.272 1392.32 806.364 C 1398.05 801.492 1410.09 796.273 C 1419.74 788.564 1436.19 772.637 C 1428.52 776.227 1363.23 786.511 C 1404.36 745.261 1418.48 726.603 C 1414.34 723.572 1369.74 749.836 C 1366.64 750.927 1349.81 758.016 C 1380.3 714.578 C 1420.01 660.652 1464.12 610.229 1506.5 558.466 C 1511.6 552.233 1518.49 543.769 1524.62 538.886 z"/><path d="M 1058.98 1220.18 C 1063.25 1219.93 1072.67 1219.01 1075.89 1220.86 C 1072.91 1226.37 1065.56 1236.31 1062.56 1242.42 C 1061.42 1244.75 1050.84 1254.47 1048.13 1257.41 C 1044.96 1260.54 1040.37 1263.97 L 1039.1 1263.45 C 1042.54 1245.64 1033.8 1225.66 1058.98 1220.18 z"/><path d="M 972.489 1219.38 C 993.955 1218.26 1004.36 1223.11 1004.88 1246.14 C 1005 1251.49 1006.68 1255.62 1005.86 1261.4 L 1004.48 1261.78 C 996.374 1255.29 970.001 1230.26 970.44 1220.31 L 972.489 1219.38 z"/><path fill-opacity="0.25" d="M 801.432 1243.47 C 807.585 1241.97 822.187 1243.88 827.963 1246.79 C 823.489 1247.12 805.444 1245.46 801.432 1243.47 z"/></g></svg>
+                        What is Perlynx?
+                    </p>
+                    <p class="help-text" style="margin:0;">
+                        <span class="texture-text" style="font-weight:600;">Perlynx</span> is a <span style="color:#ccc; font-weight:600;">procedural tile texture editor and generator</span>. Design seamless Perlin-noise textures, add overlay shapes, apply SVG masks, build tile libraries with the carousel, and export a game-ready manifest — all from a single HTML file that runs offline.
+                    </p>
+                    <div class="help-diagram">
+                        <svg width="100%" viewBox="0 0 520 110" xmlns="http://www.w3.org/2000/svg" font-family="system-ui" font-size="11">
+                            <!-- Left panel -->
+                            <rect x="8" y="8" width="88" height="94" rx="6" fill="#272727" stroke="#444"/>
+                            <text x="52" y="22" text-anchor="middle" fill="#888" font-size="9" font-weight="bold">CONTROLS</text>
+                            <rect x="14" y="27" width="76" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="14" y="38" width="60" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="14" y="49" width="70" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="14" y="60" width="50" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="14" y="71" width="65" height="7" rx="3" fill="#333"/>
+                            <rect x="14" y="82" width="55" height="7" rx="3" fill="#333"/>
+                            <!-- Canvas -->
+                            <rect x="112" y="8" width="96" height="94" rx="4" fill="#111" stroke="#555"/>
+                            <text x="160" y="32" text-anchor="middle" fill="#555" font-size="9">canvas</text>
+                            <!-- noise waves -->
+                            <path d="M118 55 Q130 42 142 55 Q154 68 166 55 Q178 42 190 55 Q202 68 208 55" stroke="#5a8a5a" stroke-width="1.5" fill="none"/>
+                            <path d="M118 65 Q134 52 148 65 Q162 78 176 65 Q190 52 204 65" stroke="#4a7a4a" stroke-width="1" fill="none"/>
+                            <!-- Right panel -->
+                            <rect x="224" y="8" width="88" height="94" rx="6" fill="#272727" stroke="#444"/>
+                            <text x="268" y="22" text-anchor="middle" fill="#888" font-size="9" font-weight="bold">MATERIAL</text>
+                            <rect x="230" y="27" width="76" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="230" y="38" width="60" height="7" rx="3" fill="#3a3a3a"/>
+                            <rect x="230" y="49" width="70" height="7" rx="3" fill="#3a3a3a"/>
+                            <!-- Carousel -->
+                            <rect x="328" y="50" width="180" height="52" rx="8" fill="#272727" stroke="#444"/>
+                            <text x="418" y="64" text-anchor="middle" fill="#888" font-size="9" font-weight="bold">TILE CAROUSEL</text>
+                            <rect x="336" y="68" width="34" height="26" rx="4" fill="#3a3a3a" stroke="#555"/>
+                            <rect x="374" y="68" width="34" height="26" rx="4" fill="#3a3a3a" stroke="#555"/>
+                            <rect x="412" y="68" width="34" height="26" rx="4" fill="#3a3a3a" stroke="#555"/>
+                            <circle cx="461" cy="81" r="9" fill="#454545" stroke="#666"/>
+                            <text x="461" y="85" text-anchor="middle" fill="#aaa" font-size="10" font-weight="bold">+</text>
+                            <!-- Labels -->
+                            <text x="52" y="108" text-anchor="middle" fill="#666" font-size="9">Left Panel</text>
+                            <text x="160" y="108" text-anchor="middle" fill="#666" font-size="9">Canvas</text>
+                            <text x="268" y="108" text-anchor="middle" fill="#666" font-size="9">Right Panel</text>
+                            <text x="418" y="108" text-anchor="middle" fill="#666" font-size="9">Bottom Bar</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- LEFT PANEL -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="3" stroke="#aaa" stroke-width="1.4"/><line x1="4" y1="5" x2="12" y2="5" stroke="#aaa" stroke-width="1.2"/><line x1="4" y1="8" x2="10" y2="8" stroke="#aaa" stroke-width="1.2"/><line x1="4" y1="11" x2="11" y2="11" stroke="#aaa" stroke-width="1.2"/></svg>
+                        Left Control Panel
+                    </p>
+                    <div class="help-row">
+                        <div class="help-icon">⚙</div>
+                        <div class="help-text">
+                            <strong>Settings</strong>
+                            <span>Set canvas <em>Resolution X/Y</em> (12–2000 px), <em>Zoom</em> the view, pick a UI <em>Theme</em>, or toggle <em>No canvas shadow</em>. Use <strong>Download</strong> to save a PNG, and <strong>Export / Open / Import</strong> to save or restore a full JSON snapshot of all tiles and settings.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">◈</div>
+                        <div class="help-text">
+                            <strong>Mask</strong>
+                            <span>Clip the canvas to an SVG shape. Pick individual SVGs with 📄, or load an entire folder with 📁 (the folder is remembered between sessions). Use <strong>✎ Edit</strong> to open the live mask editor: draw circles, rectangles or lines directly on the canvas, then hit <strong>Save</strong> or <strong>Save As New</strong>.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">∿</div>
+                        <div class="help-text">
+                            <strong>Perlin Noise</strong>
+                            <span><em>Scale</em> — zoom of the noise pattern. <em>Octaves</em> — layers of detail (1–8). <em>Persistence</em> — how much each octave contributes. <em>Power</em> — contrast curve. <em>Blur</em> — post-process softening. <em>Pixelation</em> — chunky pixel effect. <em>Seed</em> — deterministic random state. <em>Invert colors</em> — flips the noise output. Use <strong>Randomize</strong> to scramble the seed.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">◐</div>
+                        <div class="help-text">
+                            <strong>Colors</strong>
+                            <span>The noise output is mapped through a gradient built from your colour swatches (dark noise → first colour, bright noise → last colour). <strong>Add Color</strong> / <strong>Remove Color</strong> to extend or shorten the palette. Click any swatch to open the colour picker.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">◇</div>
+                        <div class="help-text">
+                            <strong>Overlays</strong>
+                            <span>Toggle <em>Enable</em> to scatter decorative shapes over the texture. Choose a shape type (Diamond, Cube, Orb, Star Crystal, Custom), then tweak Count, Size, Facets, Depth, Opacity, Rotation, and spawn Area. Hit <strong>Scatter</strong> to re-randomise positions.<br><br><em>Interactive canvas:</em> click an overlay shape to select it — then <strong>drag</strong> to move, grab the outer ring to <strong>resize</strong>, or the corner handle to <strong>rotate</strong>.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">#</div>
+                        <div class="help-text">
+                            <strong>Properties</strong>
+                            <span>Attach typed metadata to each tile for use in game manifests. Add <em>Bool</em>, <em>Int</em>, <em>Float</em>, or <em>String</em> fields. Values are stored per tile and included in <strong>Export</strong> files.</span>
+                        </div>
+                    </div>
+                    <div class="help-tip">
+                        <span class="help-tip-icon">💡</span>
+                        <span>The left panel is <strong>draggable</strong> — grab any empty area to reposition it. Click the <strong>∨</strong> collapse button to shrink it to a thumbnail, and click again to restore.</span>
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="3" stroke="#aaa" stroke-width="1.4"/><circle cx="8" cy="8" r="3" stroke="#aaa" stroke-width="1.2"/></svg>
+                        Right Material Panel
+                    </p>
+                    <div class="help-row">
+                        <div class="help-icon">▣</div>
+                        <div class="help-text">
+                            <strong>Material (Custom Panel)</strong>
+                            <span>A secondary noise layer composited over the tile as a surface material. Enable <em>Perlin Noise</em> to unlock its own Scale, Octaves, Persistence, Power, Blur, Pixelation, Seed, and colour palette. The panel is draggable — grab its header to reposition it.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CANVAS & WORKSPACE -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#aaa" stroke-width="1.4"/><path d="M5 8h6M8 5v6" stroke="#aaa" stroke-width="1.2"/></svg>
+                        Canvas &amp; Workspace
+                    </p>
+                    <div class="help-row">
+                        <div class="help-icon">⊕</div>
+                        <div class="help-text">
+                            <strong>Zoom &amp; Pan</strong>
+                            <span>Hold <kbd style="background:#333;padding:1px 5px;border-radius:4px;font-size:11px;color:#eee">Ctrl</kbd> and scroll the mouse wheel to zoom the entire workspace in/out around the cursor. On touch screens, use a <strong>two-finger pinch</strong> to zoom. The canvas zoom slider in Settings scales only the main tile canvas.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">⊞</div>
+                        <div class="help-text">
+                            <strong>Spawned Tiles</strong>
+                            <span>Drag any tile preview from the carousel onto the canvas area to <strong>spawn</strong> it as a floating copy. Drag the spawned tile near the main canvas edges or corners — it will <strong>snap</strong> (blue outline) to align perfectly. Click its ✕ button to remove it. On touch, drag to reposition — <strong>tap</strong> the tile to reveal the ✕ button.</span>
+                        </div>
+                    </div>
+                    <div class="help-diagram">
+                        <svg width="100%" viewBox="0 0 420 100" xmlns="http://www.w3.org/2000/svg" font-family="system-ui" font-size="10">
+                            <!-- main canvas -->
+                            <rect x="120" y="20" width="80" height="60" fill="#111" stroke="#555" rx="3"/>
+                            <text x="160" y="55" text-anchor="middle" fill="#444" font-size="9">main</text>
+                            <!-- snap slots -->
+                            <rect x="100" y="0" width="20" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="120" y="0" width="40" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="200" y="0" width="20" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="100" y="20" width="20" height="30" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="200" y="20" width="20" height="30" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="100" y="80" width="20" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="120" y="80" width="40" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <rect x="200" y="80" width="20" height="20" fill="none" stroke="rgba(64,180,255,0.5)" stroke-dasharray="3,2" rx="2"/>
+                            <!-- labels -->
+                            <text x="55" y="53" text-anchor="middle" fill="#7ec8e3" font-size="9">snap slots</text>
+                            <line x1="95" y1="50" x2="78" y2="50" stroke="#7ec8e3" stroke-width="0.8" stroke-dasharray="2,2"/>
+                            <text x="300" y="40" fill="#888" font-size="9">drag tile near edge</text>
+                            <text x="300" y="55" fill="#7ec8e3" font-size="9">→ snaps to slot</text>
+                            <text x="300" y="70" fill="#555" font-size="9">(blue outline preview)</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- TILE CAROUSEL -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="8" rx="2" stroke="#aaa" stroke-width="1.4"/><rect x="3" y="6" width="10" height="4" rx="1" fill="#444"/></svg>
+                        Tile Carousel (Bottom)
+                    </p>
+                    <div class="help-row">
+                        <div class="help-icon">▤</div>
+                        <div class="help-text">
+                            <strong>Managing Tiles</strong>
+                            <span>The bar at the bottom holds your tile library. <strong>Click</strong> a tile to load its settings. Hit <strong>+</strong> to add a new tile. <strong>Hover</strong> (or tap on touch) a tile to reveal the ✕ badge — click it to delete (requires at least one tile). At 7+ tiles the bar scrolls horizontally.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">↕</div>
+                        <div class="help-text">
+                            <strong>Spawning &amp; Drag</strong>
+                            <span>Drag a tile preview upward/onto the canvas to <strong>spawn</strong> a floating rendered copy. Spawned tiles help you preview how tiles tile together before exporting.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">↺</div>
+                        <div class="help-text">
+                            <strong>Reset Checkboxes</strong>
+                            <span><em>Reset state on new tile</em> — when checked, clicking <strong>+</strong> starts from default noise settings. <em>Reset properties on new tile</em> — clears the Properties list for the new tile. Uncheck both to clone the current tile's settings.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPORT / OPEN / IMPORT -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9H3V2z" stroke="#aaa" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 2v4h5" stroke="#aaa" stroke-width="1.2"/><rect x="5" y="9" width="6" height="4" rx="1" fill="#444"/></svg>
+                        Export, Open &amp; Import
+                    </p>
+                    <div class="help-row">
+                        <div class="help-icon">↓</div>
+                        <div class="help-text">
+                            <strong>Export</strong>
+                            <span>Saves all current tiles to a <code style="background:#333;padding:1px 4px;border-radius:3px;font-size:11px">perlynx.json</code> file — noise parameters, colours, overlays, mask data, properties, and optional texture images. Use this as your project file or game asset manifest.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">⊡</div>
+                        <div class="help-text">
+                            <strong>Open</strong>
+                            <span>Opens a <code style="background:#333;padding:1px 4px;border-radius:3px;font-size:11px">perlynx.json</code> file and <em>replaces</em> all current tiles with the ones in the file. Use this to resume a saved session.</span>
+                        </div>
+                    </div>
+                    <div class="help-row">
+                        <div class="help-icon">↑</div>
+                        <div class="help-text">
+                            <strong>Import</strong>
+                            <span>Opens a <code style="background:#333;padding:1px 4px;border-radius:3px;font-size:11px">perlynx.json</code> file and <em>appends</em> its tiles after your current ones, leaving existing work intact. Use this to merge tile sets.</span>
+                        </div>
+                    </div>
+                    <div class="help-tip">
+                        <span class="help-tip-icon">💡</span>
+                        <span>The mask folder you last picked is <strong>automatically remembered</strong> between sessions via the browser's storage — so your SVG library will reload on every visit without any extra clicks.</span>
+                    </div>
+                </div>
+
+                <!-- KEYBOARD / TIPS -->
+                <div class="help-section">
+                    <p class="help-section-title">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="#aaa" stroke-width="1.4"/><rect x="3" y="6" width="2" height="2" rx="0.5" fill="#aaa"/><rect x="7" y="6" width="2" height="2" rx="0.5" fill="#aaa"/><rect x="11" y="6" width="2" height="2" rx="0.5" fill="#aaa"/><rect x="3" y="9" width="10" height="2" rx="0.5" fill="#aaa"/></svg>
+                        Keyboard &amp; Quick Tips
+                    </p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div style="background:#1e1e1e; border-radius:8px; padding:10px 12px;">
+                            <div style="color:#ccc; font-weight:600; margin-bottom:6px;">Shortcuts</div>
+                            <div style="line-height:2;">
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Ctrl + Scroll</kbd> Zoom workspace<br>
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Delete / Backspace</kbd> Remove selected overlay<br>
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Click overlay</kbd> Select &amp; enter edit mode
+                            </div>
+                            <div style="color:#ccc; font-weight:600; margin:8px 0 4px;">Touch Gestures</div>
+                            <div style="line-height:2;">
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Pinch</kbd> Zoom workspace<br>
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Tap tile</kbd> Reveal ✕ badge (carousel)<br>
+                                <kbd style="background:#333;padding:1px 5px;border-radius:4px;color:#eee">Tap spawned tile</kbd> Reveal ✕ close button
+                            </div>
+                        </div>
+                        <div style="background:#1e1e1e; border-radius:8px; padding:10px 12px;">
+                            <div style="color:#ccc; font-weight:600; margin-bottom:6px;">Pro Tips</div>
+                            <div style="line-height:1.9;">
+                                🎲 Randomize + Download in quick succession to batch-generate texture variants<br>
+                                🎭 Use the Mask editor to hand-paint custom SVG shapes without a separate tool<br>
+                                🏷️ Properties export with Save State — ready to paste into a game engine
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── API section ────────────────────── -->
+                <div class="help-section">
+                    <div class="help-section-title">JS API — perlynx.js</div>
+
+                    <div class="help-row">
+                        <div class="help-text">
+                            <strong>perlynx.js</strong> is a standalone library that renders tiles entirely
+                            off-screen — no UI required. Include it in any page, or call it from Node (with a
+                            Canvas implementation such as <em>node-canvas</em>).
+                        </div>
+                    </div>
+
+                    <div class="help-row" style="margin-top:10px;">
+                        <div class="help-text" style="font-family:monospace; background:#1a1a1a; border:1px solid #444; border-radius:6px; padding:10px 14px; white-space:pre-wrap; font-size:12px; line-height:1.7; color:#ccc;">
+<span style="color:#888;">// generateTiles(tiles, imageKey?, thumbnailKey?)</span>
+
+<span style="color:#7ec8e3;">const</span> tiles = [
+  { name: <span style="color:#b5cea8;">'grass'</span>,  walkable: <span style="color:#569cd6;">true</span>  },
+  { name: <span style="color:#b5cea8;">'water'</span>,  walkable: <span style="color:#569cd6;">false</span>,
+    perlynx: { inputs: { seed: <span style="color:#b5cea8;">'99'</span>, resX: <span style="color:#b5cea8;">'256'</span>, resY: <span style="color:#b5cea8;">'256'</span> },
+               colors: [<span style="color:#b5cea8;">'#0a2a50'</span>, <span style="color:#b5cea8;">'#1a5078'</span>] } }
+];
+
+<span style="color:#58a6ff;">generateTiles</span>(tiles).then(<span style="color:#dcdcaa;">result</span> => {
+  <span style="color:#888;">// result[0].texture    → full-res PNG data URL</span>
+  <span style="color:#888;">// result[0].thumbnail  → 48×48 PNG data URL</span>
+  console.log(result);
+});</div>
+                    </div>
+
+                    <div class="help-row" style="margin-top:8px;">
+                        <div class="help-text">
+                            Each tile's <code style="background:#222;padding:1px 4px;border-radius:3px;">perlynx</code> object mirrors the structure
+                            in the <span style="font-weight:600">Export JSON</span> produced by this app — paste it directly. Omit
+                            <code style="background:#222;padding:1px 4px;border-radius:3px;">perlynx</code> entirely to use all defaults (256×256, ground-like brown noise).
+                        </div>
+                    </div>
+
+                    <div class="help-row" style="margin-top:8px;">
+                        <div class="help-text">
+                            <strong>Parameters</strong> (all optional, defaults shown):
+                        </div>
+                    </div>
+                    <div class="help-row" style="margin-top:4px;">
+                        <div class="help-text" style="font-family:monospace; background:#1a1a1a; border:1px solid #444; border-radius:6px; padding:8px 14px; font-size:11px; line-height:1.8; color:#ccc; white-space:pre-wrap;">inputs.resX / resY      256      output size in pixels
+inputs.seed             12345    noise seed
+inputs.scale            40       noise scale
+inputs.octaves          6        fractal octaves
+inputs.persistence      0.8      octave amplitude falloff
+inputs.power            1        contrast curve
+inputs.blur             0        Gaussian blur radius
+inputs.pixelation       1        pixel-art block size
+inputs.invert           false    invert lightness
+inputs.shapesEnabled    false    enable mineral overlays
+  + full overlay params (shapeType, shapeCount, …)
+
+colors        ['#582b13','#63321d']   base gradient stops
+cmColors      ['#888','#aaa',…]      overlay gradient stops
+mineralsArray []                     pre-placed mineral positions
+mineralScatterSeed 0                 seed offset for placement</div>
+                    </div>
+
+                    <div class="help-row" style="margin-top:12px;">
+                        <div class="help-text">
+                            <button id="btn-download-genjs" style="padding:7px 20px; border-radius:7px; border:1px solid #556b8a; background:#1d3550; color:#7ec8e3; font-size:13px; cursor:pointer; transition:background 0.15s;">⬇ Download perlynx.js</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; padding-top:4px;">
+                    <button id="btn-help-close-bottom" style="padding:8px 28px; border-radius:8px; border:1px solid #555; background:#333; color:#ccc; font-size:13px; cursor:pointer; transition:background 0.15s;">Got it — close</button>
+                </div>
+
+            </div><!-- /body -->
+        </div><!-- /modal -->
+    </div><!-- /backdrop -->
 
     <div class="controls">
         <div id="main-header" style="display: flex; align-items: center; gap: 4px; justify-content: center; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
             <h1 style="margin: 0;">Perlynx</h1>
-        <button id="menu-toggle" title="Collapse menu">&#x2228;</button>
+        <button id="menu-toggle" data-no-theme title="Collapse menu">&#x2228;</button>
         <svg id="perlynx-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="80" height="80" style="flex-shrink: 0;">
             <defs>
                 <pattern id="perlin-fill" patternUnits="objectBoundingBox" width="1" height="1">
@@ -125,40 +596,65 @@
                 </div>
             </div>
             <div class="control-group">
-                <label>Menu Brightness</label>
+                <label>Theme</label>
                 <div class="input-row">
-                    <input type="range" id="menuBrightness" min="0" max="100" value="10">
-                    <input type="number" id="menuBrightness_num" min="0" max="100" value="10">
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Mask</label>
-                <div class="input-row">
-                    <select id="maskSelect" style="flex:1;">
-                        <option value="">None</option>
-                        <option value="Tunnel5.svg">Tunnel5</option>
-                        <option value="Tunnel6.svg">Tunnel6</option>
-                        <option value="Tunnel7.svg">Tunnel7</option>
-                        <option value="Tunnel8.svg">Tunnel8</option>
-                        <option value="Tunnel9.svg">Tunnel9</option>
-                        <option value="Tunnel10.svg">Tunnel10</option>
-                        <option value="Tunnel11.svg">Tunnel11</option>
-                        <option value="Tunnel12.svg">Tunnel12</option>
+                    <select id="menuTheme" style="flex:1;">
+                        <option value="default">Default</option>
+                        <option value="retro">Retro</option>
+                        <option value="dark">Dark</option>
+                        <option value="modern">Modern</option>
+                        <option value="slate">Slate</option>
+                        <option value="high-contrast-dark">High Contrast Dark</option>
+                        <option value="high-contrast-light">High Contrast Light</option>
+                        <option value="solarized">Solarized</option>
+                        <option value="midnight">Midnight Blue</option>
+                        <option value="forest">Forest</option>
                     </select>
                 </div>
             </div>
             <div class="control-group" style="margin-top: 10px;">
                 <div class="input-row" style="justify-content: center; flex-wrap: wrap;">
-                    <label for="invert">Invert</label>
-                    <input type="checkbox" id="invert">
-                    <button id="btn-randomize">Randomize</button>
+                    <label for="hideCanvasShadow">No canvas shadow</label>
+                    <input type="checkbox" id="hideCanvasShadow">
                     <button id="btn-download">Download</button>
-                    <button id="btn-save-state">Save State</button>
-                    <button id="btn-load-state">Load State</button>
+                    <button id="btn-export">Export</button>
+                    <button id="btn-open">Open</button>
+                    <button id="btn-import">Import</button>
+                    <button id="btn-help-trigger" data-no-theme title="Help / Quick Guide">?</button>
                 </div>
             </div>
         </details>
-        <details class="sliders-section" open>
+        <details class="sliders-section">
+            <summary>Mask</summary>
+            <div class="control-group">
+                <div class="input-row">
+                    <select id="maskSelect" style="flex:1;">
+                        <option value="">None</option>
+                    </select>
+                    <button id="btn-mask-file" data-no-theme title="Pick single SVG mask(s)" style="flex-shrink:0; font-size:16px; padding:2px 6px; background:#e7e7e7; border:1px solid #bbb;">&#128196;</button>
+                    <button id="btn-mask-folder" data-no-theme title="Pick masks folder" style="flex-shrink:0; font-size:16px; padding:2px 6px; background:#e7e7e7; border:1px solid #bbb;">&#128193;</button>
+                    <button id="btn-mask-editor" data-no-theme title="Toggle live mask editing on canvas" style="flex-shrink:0; font-size:11px; font-weight:bold; padding:2px 7px; background:#e7e7e7; border:1px solid #bbb; border-radius:5px; cursor:pointer;">&#9998; Edit</button>
+                </div>
+            </div>
+            <div id="mask-edit-controls" style="display:none;">
+                <div class="control-group" style="margin-top:4px;">
+                    <div class="input-row" style="flex-wrap:wrap; gap:4px; justify-content:center;">
+                        <button id="btn-me-file" title="Load SVG file from disk">&#128194; File</button>
+                        <button id="btn-me-circle">&#9675; Circle</button>
+                        <button id="btn-me-rect">&#9645; Rect</button>
+                        <button id="btn-me-line">&#9585; Line</button>
+                        <button id="btn-me-delete" title="Delete selected shape">&#10005; Del</button>
+                    </div>
+                    <div class="input-row" style="flex-wrap:wrap; gap:4px; justify-content:center; margin-top:4px;">
+                        <button id="btn-me-save-over">Save</button>
+                        <button id="btn-me-save-new">Save As New</button>
+                    </div>
+                    <div id="me-hint" style="font-size:10px; opacity:0.65; text-align:center; min-height:14px; margin-top:3px;"></div>
+                    <input type="file" id="meFileInput" accept=".svg" style="display:none;">
+                </div>
+            </div>
+        </details>
+        <details class="sliders-section">
             <summary>Perlin Noise</summary>
             <div class="control-group">
                 <label>Scale</label>
@@ -209,6 +705,13 @@
                     <input type="number" id="seed_num" min="0" max="99999" value="12345">
                 </div>
             </div>
+            <div class="control-group">
+                <div class="input-row" style="justify-content:center; flex-wrap:wrap; gap:8px;">
+                    <label for="invert">Invert colors</label>
+                    <input type="checkbox" id="invert">
+                    <button id="btn-randomize">Randomize</button>
+                </div>
+            </div>
         </details>
         <details class="color-inputs colors-section" open>
             <summary>Colors</summary>
@@ -228,10 +731,10 @@
                 </div>
 </details>
         <details class="color-inputs shapes-section">
-            <summary>Minerals</summary>
+            <summary>Overlays</summary>
             <div class="control-group">
                 <div class="input-row" style="justify-content: center;">
-                    <label for="shapesEnabled">Add Minerals</label>
+                    <label for="shapesEnabled">Enable</label>
                     <input type="checkbox" id="shapesEnabled">
                 </div>
             </div>
@@ -313,6 +816,35 @@
                 <div class="input-row" style="justify-content: center;">
                     <button id="btn-scatter">Scatter</button>
                 </div>
+            </div>
+        </details>
+    <details class="color-inputs shapes-section" id="properties-section">
+            <summary>Properties</summary>
+            <div id="prop-list" style="display:flex; flex-direction:column; gap:4px; margin-bottom:6px;"></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                <button id="btn-prop-add-bool" title="Add boolean property" style="flex:1; font-size:11px;">+ Bool</button>
+                <button id="btn-prop-add-int" title="Add integer property" style="flex:1; font-size:11px;">+ Int</button>
+                <button id="btn-prop-add-float" title="Add float property" style="flex:1; font-size:11px;">+ Float</button>
+                <button id="btn-prop-add-string" title="Add string property" style="flex:1; font-size:11px;">+ String</button>
+                <button id="btn-prop-reset" title="Clear all properties" style="flex:1; font-size:11px;">Reset</button>
+            </div>
+            <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="props-apply-all" checked style="margin:0; vertical-align:middle;">
+                <label for="props-apply-all" style="font-size:11px; cursor:pointer; margin:0;">Apply to all tiles</label>
+            </div>
+            <hr style="border:none; border-top:1px solid #555; margin:8px 0;">
+            <div style="font-size:11px; color:#aaa; margin-bottom:4px;">Image export options</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                <input type="checkbox" id="export-preview-enabled" style="margin:0; flex-shrink:0;">
+                <label for="export-preview-enabled" style="font-size:11px; cursor:pointer; white-space:nowrap;">Thumbnail <span id="export-preview-res" style="color:#888;">(48×48)</span></label>
+                <input type="text" id="export-preview-key" value="thumbnail" placeholder="key name"
+                    style="flex:1; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px; display:none;">
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="export-image-enabled" style="margin:0; flex-shrink:0;">
+                <label for="export-image-enabled" style="font-size:11px; cursor:pointer; white-space:nowrap;">Full image</label>
+                <input type="text" id="export-image-key" value="texture" placeholder="key name"
+                    style="flex:1; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px; display:none;">
             </div>
         </details>
     </div>
@@ -410,19 +942,11 @@
         </details>
     </div>
 
+    </div>
+
 <script>
 // --- Mask State ---
-// Inline base64 data URLs — avoids fetch() and canvas tainting on file://
-const _maskDataURLs = {
-    'Tunnel5.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNDggLTYgYzY4IC05IDM0OCAtOSA0MDUgLTEgNDcgOCA0NyA4IDQ3IDQ2IGwwIDM5Ci0yNTAgMCAtMjUwIDAgMCAtMzl6Ii8+CjxwYXRoIGQ9Ik0wIDQwIGwwIC00MCA0MCAwIGMyMiAwIDQwIDIgNDAgNSAwIDE4IC0yNiA1NSAtNDcgNjQgLTMzIDE1IC0zMyAxNgotMzMgLTI5eiIvPgo8cGF0aCBkPSJNNDUxIDUxIGMtNDEgLTM5IC0zOSAtNTEgOSAtNTEgbDQwIDAgMCA0MCBjMCAyMiAtNCA0MCAtOSA0MCAtNSAwCi0yMyAtMTMgLTQwIC0yOXoiLz4KPC9nPgo8L3N2Zz4K',
-    'Tunnel6.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDI1MCBsMCAtMjUwIDQwIDAgNDAgMCAyIDQ4IGMwIDI2IDIgMTAxIDMgMTY3IDEgMTI2IDE1IDE3NCA1MwoxOTEgOSA0IDc4IDggMTUyIDkgMjM1IDQgMjEwIC0xIDIxMCA0NSBsMCA0MCAtMjUwIDAgLTI0OSAwIC0xIC0yNTB6Ii8+CjxwYXRoIGQ9Ik00NjcgNzIgYy0xNCAtNiAtNDcgLTUzIC00NyAtNjggMCAtMiAxOCAtNCA0MCAtNCBsNDAgMCAwIDQwIGMwIDQxCi0yIDQ0IC0zMyAzMnoiLz4KPC9nPgo8L3N2Zz4K',
-    'Tunnel7.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ1OSBjMCAtMzMgMyAtNDAgMTYgLTM1IDkgMyAyMCA2IDI1IDYgOCAwIDM5IDUxIDM5IDY1IDAgMyAtMTggNQotNDAgNSBsLTQwIDAgMCAtNDF6Ii8+CjxwYXRoIGQ9Ik00MjUgNDc4IGM0IC0xMyAxMiAtMjggMTkgLTM0IDYgLTcgMjEgLTE1IDM0IC0xOSAyMCAtNiAyMiAtMyAyMiAzNAppbDAgNDEgLTQxIDAgYy0zNyAwIC00MCAtMiAtMzQgLTIyeiIvPgo8cGF0aCBkPSJNNDQ5IDQ4IGMtMTYgLTE4IC0yOSAtMzYgLTI5IC00MCAwIC01IDE4IC04IDQwIC04IGw0MCAwIDAgNDAgYzAgNDgKLTEyIDUwIC01MSA4eiIvPgo8L2c+Cjwvc3ZnPgo=',
-    'Tunnel8.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MCBjMCAtNDUgMCAtNDQgMzMgLTI5IDIxIDkgNDcgNDYgNDcgNjQgMCAzIC0xOCA1IC00MCA1IGwtNDAgMAowIC00MHoiLz4KPHBhdGggZD0iTTQyMCA0ODggYzEgLTIwIDMzIC01NSA1OCAtNjMgMjAgLTYgMjIgLTMgMjIgMzQgbDAgNDEgLTQwIDAgYy0yNSAwCi00MCAtNSAtNDAgLTEyeiIvPgo8cGF0aCBkPSJNMCA0MCBsMCAtNDAgNDEgMCA0MSAwIC0xNyAyOCBjLTE5IDI5IC00NCA1MiAtNTcgNTIgLTQgMCAtOCAtMTggLTgKLTQweiIvPgo8cGF0aCBkPSJNNDU4IDYwIGMtMTQgLTExIC0yOCAtMjkgLTMxIC00MCAtNCAtMTggMCAtMjAgMzQgLTIwIDM5IDAgMzkgMCAzOQo0MCAwIDQ1IC03IDQ4IC00MiAyMHoiLz4KPC9nPgo8L3N2Zz4K',
-    'Tunnel9.svg':  'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtNDAgNTggLTYgYzMxIC0zIDY2IC0xMCA3OCAtMTUgMTIgLTQgMjcgLTQgMzUgMSA4IDUgMzQgOQo1OSA5IDI1IDAgNzQgMSAxMTAgMyAzNiAyIDg2IDUgMTEzIDUgbDQ3IDIgMCA0MCAwIDQwIC0yNTAgMCAtMjUwIDAgMCAtMzl6Ii8+CjwvZz4KPC9zdmc+Cg==',
-    'Tunnel10.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDI1MCBsMCAtMjUwIDQwIDAgNDAgMCAxIDQzIGMxIDIzIDIgODUgMyAxMzkgMSA1MyA0IDEwMCA5IDEwNCA0CjQgNyAxNyA3IDI5IDAgMzMgMzAgODUgNTQgOTQgMTEgNSA3NyA3IDE0NiA2IDY5IC0xIDE0MiAwIDE2MyAzIDM2IDQgMzcgNiAzNwo0MyBsMCAzOSAtMjUwIDAgLTI1MCAwIDAgLTI1MHoiLz4KPC9nPgo8L3N2Zz4K',
-    'Tunnel11.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNDggLTYgYzI2IC0zIDgzIC00IDEyNyAtMiA0NCAxIDkzIC0yIDEwOCAtNyAyMCAtNyAzNQotNiA1MiAzIDE2IDggNDEgMTEgNzAgNiA3NiAtMTAgOTUgLTEgOTUgNDUgbDAgMzkgLTI1MCAwIC0yNTAgMCAwIC0zOXoiLz4KPHBhdGggZD0iTTU1IDkwIGMtMyAtNSAtMTcgLTEwIC0zMSAtMTAgLTIxIDAgLTI0IC00IC0yNCAtNDAgbDAgLTQwIDI1MCAwCjI1MCAwIDAgMzkgMCAzOCAtNjEgNyBjLTM0IDMgLTc4IDMgLTk5IDAgLTIyIC00IC01MiAtMiAtNjkgNCAtMjEgNyAtNTEgNwotMTAxIDAgLTUyIC04IC03NCAtOCAtODMgMSAtMTQgMTQgLTI0IDE0IC0zMiAxeiIvPgo8L2c+Cjwvc3ZnPgo=',
-    'Tunnel12.svg': 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTAuMDAwMDAwcHQiIGhlaWdodD0iNTAuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MC4wMDAwMDAgNTAuMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+Cgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1MC4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiCmZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDQ2MSBsMCAtMzkgNTMgLTggYzI4IC00IDEwMiAtOCAxNjIgLTkgMTYwIC0yIDE5NiAtMjYgMjEwIC0xNDEgOAotNzIgLTkgLTE0MCAtMzkgLTE1OSAtMjggLTE3IC0xMzAgLTI2IC0xODQgLTE2IC0yNSA1IC03OCA0IC0xMjMgLTEgbC03OSAtMTEKMCAtMzggMCAtMzkgMjUwIDAgMjUwIDAgMCAyNTAgMCAyNTAgLTI1MCAwIC0yNTAgMCAwIC0zOXoiLz4KPC9nPgo8L3N2Zz4K',
-};
+const _maskDataURLs = {}; // populated at runtime via folder picker or save/load
 let maskImage = null;
 let maskLoadedSrc = '';
 // _applyMask: syncs maskImage to filename, then calls done()
@@ -455,10 +979,608 @@ function loadMask(filename) {
     _applyMask(filename, generate);
 }
 
+// --- Mask Folder Picker (File System Access API + IndexedDB persistence) ---
+const MASK_DB_NAME = 'perlynxMaskFolder';
+const MASK_DB_STORE = 'handles';
+function _openMaskDB(cb) {
+    const req = indexedDB.open(MASK_DB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(MASK_DB_STORE);
+    req.onsuccess = e => cb(e.target.result);
+    req.onerror = () => cb(null);
+}
+function _saveFolderHandle(handle) {
+    _openMaskDB(db => {
+        if (!db) return;
+        db.transaction(MASK_DB_STORE, 'readwrite').objectStore(MASK_DB_STORE).put(handle, 'maskFolder');
+    });
+}
+function _sortMaskSelect() {
+    const sel = document.getElementById('maskSelect');
+    const options = Array.from(sel.options).slice(1); // keep 'None' first
+    options.sort((a, b) => a.text.localeCompare(b.text));
+    options.forEach(o => sel.appendChild(o));
+}
+function _loadSVGsFromHandle(handle) {
+    const sel = document.getElementById('maskSelect');
+    const existing = new Set(Array.from(sel.options).map(o => o.value));
+    if (!handle.values) return;
+    (async () => {
+        const entries = [];
+        for await (const entry of handle.values()) {
+            if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.svg')) {
+                entries.push(entry);
+            }
+        }
+        entries.sort((a, b) => a.name.localeCompare(b.name));
+        for (const entry of entries) {
+            entry.getFile().then(file => {
+                const reader = new FileReader();
+                reader.onload = e => { _maskDataURLs[entry.name] = e.target.result; };
+                reader.readAsDataURL(file);
+            });
+            if (!existing.has(entry.name)) {
+                const opt = document.createElement('option');
+                opt.value = entry.name;
+                opt.textContent = entry.name.replace(/\.svg$/i, '');
+                sel.appendChild(opt);
+                existing.add(entry.name);
+            }
+        }
+    })();
+}
+async function pickMaskFile() {
+    if (!window.showOpenFilePicker) { alert('Your browser does not support the File System Access API.'); return; }
+    try {
+        const handles = await window.showOpenFilePicker({
+            types: [{ description: 'SVG Files', accept: { 'image/svg+xml': ['.svg'] } }],
+            multiple: true
+        });
+        const sel = document.getElementById('maskSelect');
+        const existing = new Set(Array.from(sel.options).map(o => o.value));
+        for (const fh of handles) {
+            const file = await fh.getFile();
+            const name = file.name;
+            if (!name.toLowerCase().endsWith('.svg')) continue;
+            const reader = new FileReader();
+            reader.onload = e => { _maskDataURLs[name] = e.target.result; };
+            reader.readAsDataURL(file);
+            if (!existing.has(name)) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name.replace(/\.svg$/i, '');
+                sel.appendChild(opt);
+                existing.add(name);
+            }
+        }
+        _sortMaskSelect();
+    } catch (e) { /* user cancelled */ }
+}
+async function pickMasksFolder() {
+    if (!window.showDirectoryPicker) { alert('Your browser does not support the File System Access API.'); return; }
+    try {
+        const handle = await window.showDirectoryPicker({ mode: 'read' });
+        _saveFolderHandle(handle);
+        _loadSVGsFromHandle(handle);
+    } catch (e) { /* user cancelled */ }
+}
+function initMasks() {
+    _openMaskDB(db => {
+        if (!db) return;
+        const req = db.transaction(MASK_DB_STORE, 'readonly').objectStore(MASK_DB_STORE).get('maskFolder');
+        req.onsuccess = async e => {
+            const handle = e.target.result;
+            if (!handle) return;
+            try {
+                const perm = await handle.queryPermission({ mode: 'read' });
+                if (perm === 'granted' || await handle.requestPermission({ mode: 'read' }) === 'granted') {
+                    _loadSVGsFromHandle(handle);
+                }
+            } catch (err) { /* handle stale */ }
+        };
+    });
+}
+
+// ============================================================
+// MASK EDITOR (ME) — lives on the overlay canvas above the tile
+// ============================================================
+const ME = {
+    active: false,
+    overlay: null, octx: null,
+    shapes: [], nextId: 1,
+    selected: null,
+    dragMode: null, dragStart: null,
+    baseSVGString: '',
+    baseViewBox: { x: 0, y: 0, w: 500, h: 500 },
+    currentMaskName: '',
+    HR: 7, // handle half-size in overlay px
+
+    toggle() {
+        if (this.active) {
+            this.active = false;
+            document.getElementById('mask-edit-controls').style.display = 'none';
+            const btn = document.getElementById('btn-mask-editor');
+            btn.textContent = '\u270e Edit';
+            btn.style.outline = '';
+            if (this.overlay) {
+                this.overlay.style.pointerEvents = 'none';
+                this.overlay.style.cursor = 'default';
+                this.octx.clearRect(0, 0, this.overlay.width, this.overlay.height);
+            }
+            canvasEl.style.pointerEvents = '';
+        } else {
+            this.active = true;
+            this._initOverlay();
+            document.getElementById('mask-edit-controls').style.display = '';
+            const btn = document.getElementById('btn-mask-editor');
+            btn.textContent = '\u2713 Editing';
+            btn.style.outline = '2px solid #4a9';
+            this.overlay.style.pointerEvents = 'all';
+            this.overlay.style.cursor = 'crosshair';
+            canvasEl.style.pointerEvents = 'none';
+            // Load current mask's SVG into editor
+            const name = document.getElementById('maskSelect').value;
+            this.currentMaskName = name || '';
+            if (name && _maskDataURLs[name]) {
+                this._parseSVG(_maskDataURLs[name]);
+            } else {
+                this.shapes = [];
+                this._useCanvasViewBox();
+            }
+            this._syncOverlay();
+            this.render();
+        }
+    },
+
+    _initOverlay() {
+        if (this.overlay) return;
+        this.overlay = document.getElementById('mask-overlay');
+        this.octx = this.overlay.getContext('2d');
+        this.overlay.addEventListener('mousedown',  e => ME._onDown(e));
+        this.overlay.addEventListener('mousemove',  e => ME._onMove(e));
+        this.overlay.addEventListener('mouseup',    () => ME._onUp());
+        this.overlay.addEventListener('mouseleave', () => ME._onUp());
+        this.overlay.addEventListener('touchstart', e => { e.preventDefault(); ME._onDown(ME._te(e)); }, { passive: false });
+        this.overlay.addEventListener('touchmove',  e => { e.preventDefault(); ME._onMove(ME._te(e)); }, { passive: false });
+        this.overlay.addEventListener('touchend',   () => ME._onUp());
+    },
+    _te(e) { const t = e.touches[0]; return { clientX: t.clientX, clientY: t.clientY }; },
+
+    _syncOverlay() {
+        if (!this.overlay) return;
+        const r = canvasEl.getBoundingClientRect();
+        const W = Math.round(r.width), H = Math.round(r.height);
+        if (this.overlay.width !== W || this.overlay.height !== H) {
+            this.overlay.width  = W;
+            this.overlay.height = H;
+        }
+        this.overlay.style.width  = canvasEl.style.width;
+        this.overlay.style.height = canvasEl.style.height;
+    },
+
+    _parseSVG(dataURL) {
+        try {
+            const svgStr = dataURL.includes(';base64,')
+                ? atob(dataURL.split(';base64,')[1])
+                : decodeURIComponent(dataURL.split(',')[1] || '');
+            this.baseSVGString = svgStr;
+            const m = svgStr.match(/viewBox=["']([^"']+)["']/);
+            if (m) {
+                const p = m[1].trim().split(/[\s,]+/).map(Number);
+                if (p.length === 4) this.baseViewBox = { x: p[0], y: p[1], w: p[2], h: p[3] };
+            } else {
+                this._useCanvasViewBox();
+            }
+        } catch (_) { this.baseSVGString = ''; this._useCanvasViewBox(); }
+        this.shapes = [];
+    },
+
+    _useCanvasViewBox() {
+        this.baseViewBox = { x: 0, y: 0,
+            w: parseInt(_el('resX').value) || 500,
+            h: parseInt(_el('resY').value) || 500 };
+        this.baseSVGString = '';
+    },
+
+    _toS(px, py) {
+        const { x, y, w, h } = this.baseViewBox;
+        return { x: x + (px / this.overlay.width)  * w,
+                 y: y + (py / this.overlay.height) * h };
+    },
+    _toP(sx, sy) {
+        const { x, y, w, h } = this.baseViewBox;
+        return { x: ((sx - x) / w) * this.overlay.width,
+                 y: ((sy - y) / h) * this.overlay.height };
+    },
+    _hint(msg) { const el = document.getElementById('me-hint'); if (el) el.textContent = msg; },
+
+    addShape(type) {
+        if (!this.active) this.toggle();
+        const { x, y, w, h } = this.baseViewBox;
+        const cx = x + w * 0.5, cy = y + h * 0.5, r = w * 0.18;
+        const id = this.nextId++;
+        const s = type === 'circle' ? { type, id, cx, cy, rx: r, ry: r * 0.7 }
+                : type === 'rect'   ? { type, id, x: cx - r, y: cy - r * 0.7, w: r * 2, h: r * 1.4 }
+                : type === 'line'   ? { type, id, x1: cx - r, y1: cy, x2: cx + r, y2: cy }
+                : null;
+        if (!s) return;
+        this.shapes.push(s); this.selected = id;
+        this._commitAndRender();
+        this._hint(type + ' added \u2014 drag to move, handles to resize');
+    },
+
+    deleteSelected() {
+        if (!this.selected) return;
+        this.shapes = this.shapes.filter(s => s.id !== this.selected);
+        this.selected = null;
+        this._commitAndRender();
+        this._hint('Deleted');
+    },
+
+    _get(id) { return this.shapes.find(s => s.id === id); },
+
+    _handles(s) {
+        if (!s) return [];
+        if (s.type === 'circle') return [
+            { id: 'e', ...this._toP(s.cx + s.rx, s.cy) },
+            { id: 'w', ...this._toP(s.cx - s.rx, s.cy) },
+            { id: 'n', ...this._toP(s.cx, s.cy - s.ry) },
+            { id: 's', ...this._toP(s.cx, s.cy + s.ry) },
+        ];
+        if (s.type === 'rect') {
+            const { x: sx, y: sy, w: sw, h: sh } = s;
+            return [
+                { id: 'nw', ...this._toP(sx,         sy) },
+                { id: 'n',  ...this._toP(sx + sw / 2, sy) },
+                { id: 'ne', ...this._toP(sx + sw,      sy) },
+                { id: 'e',  ...this._toP(sx + sw,      sy + sh / 2) },
+                { id: 'se', ...this._toP(sx + sw,      sy + sh) },
+                { id: 's',  ...this._toP(sx + sw / 2, sy + sh) },
+                { id: 'sw', ...this._toP(sx,           sy + sh) },
+                { id: 'w',  ...this._toP(sx,           sy + sh / 2) },
+            ];
+        }
+        if (s.type === 'line') return [
+            { id: 'p1', ...this._toP(s.x1, s.y1) },
+            { id: 'p2', ...this._toP(s.x2, s.y2) },
+        ];
+        return [];
+    },
+
+    _hitHandle(hndls, mx, my) {
+        for (const h of hndls)
+            if (Math.abs(mx - h.x) <= this.HR + 3 && Math.abs(my - h.y) <= this.HR + 3) return h.id;
+        return null;
+    },
+
+    _hitShape(s, mx, my) {
+        const HIT = this.HR * 2 + 6;
+        if (s.type === 'circle') {
+            const c = this._toP(s.cx, s.cy);
+            const rx = Math.abs(this._toP(s.cx + s.rx, s.cy).x - c.x) || 1;
+            const ry = Math.abs(this._toP(s.cx, s.cy - s.ry).y - c.y) || 1;
+            return ((mx - c.x) / rx) ** 2 + ((my - c.y) / ry) ** 2 <= 1.3;
+        }
+        if (s.type === 'rect') {
+            const tl = this._toP(s.x, s.y), br = this._toP(s.x + s.w, s.y + s.h);
+            return mx >= tl.x - 4 && mx <= br.x + 4 && my >= tl.y - 4 && my <= br.y + 4;
+        }
+        if (s.type === 'line') {
+            const p1 = this._toP(s.x1, s.y1), p2 = this._toP(s.x2, s.y2);
+            const dx = p2.x - p1.x, dy = p2.y - p1.y, len2 = dx * dx + dy * dy;
+            if (!len2) return Math.hypot(mx - p1.x, my - p1.y) < HIT;
+            const t = Math.max(0, Math.min(1, ((mx - p1.x) * dx + (my - p1.y) * dy) / len2));
+            return Math.hypot(p1.x + t * dx - mx, p1.y + t * dy - my) <= HIT;
+        }
+        return false;
+    },
+
+    _pos(e) {
+        const r = this.overlay.getBoundingClientRect();
+        return {
+            x: (e.clientX - r.left) * (this.overlay.width  / r.width),
+            y: (e.clientY - r.top)  * (this.overlay.height / r.height),
+        };
+    },
+
+    _onDown(e) {
+        const { x: mx, y: my } = this._pos(e);
+        if (this.selected) {
+            const sel = this._get(this.selected);
+            if (sel) {
+                const hid = this._hitHandle(this._handles(sel), mx, my);
+                if (hid) {
+                    this.dragMode  = 'resize-' + hid;
+                    this.dragStart = { mx, my, sc: JSON.parse(JSON.stringify(sel)) };
+                    return;
+                }
+            }
+        }
+        for (let i = this.shapes.length - 1; i >= 0; i--) {
+            if (this._hitShape(this.shapes[i], mx, my)) {
+                this.selected  = this.shapes[i].id;
+                this.dragMode  = 'move';
+                this.dragStart = { mx, my, sc: JSON.parse(JSON.stringify(this.shapes[i])) };
+                this.render(); return;
+            }
+        }
+        this.selected = null; this.dragMode = null; this.render();
+    },
+
+    _onMove(e) {
+        if (!this.dragMode || !this.dragStart) return;
+        const { x: mx, y: my } = this._pos(e);
+        const dpx = mx - this.dragStart.mx, dpy = my - this.dragStart.my;
+        const { w, h } = this.baseViewBox;
+        const dsx = (dpx / this.overlay.width) * w, dsy = (dpy / this.overlay.height) * h;
+        const sc = this.dragStart.sc, sel = this._get(this.selected);
+        if (!sel) return;
+        if (this.dragMode === 'move') {
+            if (sel.type === 'circle') { sel.cx = sc.cx + dsx; sel.cy = sc.cy + dsy; }
+            if (sel.type === 'rect')   { sel.x  = sc.x  + dsx; sel.y  = sc.y  + dsy; }
+            if (sel.type === 'line')   { sel.x1 = sc.x1 + dsx; sel.y1 = sc.y1 + dsy; sel.x2 = sc.x2 + dsx; sel.y2 = sc.y2 + dsy; }
+        } else {
+            const hk = this.dragMode.replace('resize-', '');
+            if (sel.type === 'circle') {
+                if (hk === 'e') sel.rx = Math.max(1, sc.rx + dsx);
+                if (hk === 'w') sel.rx = Math.max(1, sc.rx - dsx);
+                if (hk === 's') sel.ry = Math.max(1, sc.ry + dsy);
+                if (hk === 'n') sel.ry = Math.max(1, sc.ry - dsy);
+            }
+            if (sel.type === 'rect') {
+                let { x, y, w: rw, h: rh } = sc;
+                if (hk.includes('n')) { y += dsy; rh -= dsy; }
+                if (hk.includes('s')) { rh += dsy; }
+                if (hk.includes('w')) { x += dsx; rw -= dsx; }
+                if (hk.includes('e')) { rw += dsx; }
+                if (rw < 0) { x += rw; rw = -rw; }
+                if (rh < 0) { y += rh; rh = -rh; }
+                sel.x = x; sel.y = y; sel.w = Math.max(1, rw); sel.h = Math.max(1, rh);
+            }
+            if (sel.type === 'line') {
+                if (hk === 'p1') { sel.x1 = sc.x1 + dsx; sel.y1 = sc.y1 + dsy; }
+                if (hk === 'p2') { sel.x2 = sc.x2 + dsx; sel.y2 = sc.y2 + dsy; }
+            }
+        }
+        this._debouncedCommit();
+        this.render();
+    },
+
+    _commitTimer: null,
+    _debouncedCommit() {
+        clearTimeout(this._commitTimer);
+        this._commitTimer = setTimeout(() => this._commit(), 35);
+    },
+
+    _onUp() {
+        if (this.dragMode) this._commit();
+        this.dragMode = null; this.dragStart = null;
+        this.render();
+    },
+
+    _commit() {
+        const url = this.toDataURL();
+        const name = this.currentMaskName || '__me_preview__';
+        _maskDataURLs[name] = url; maskLoadedSrc = '';
+        const sel = document.getElementById('maskSelect');
+        if (!Array.from(sel.options).some(o => o.value === name)) {
+            const opt = document.createElement('option');
+            opt.value = name; opt.textContent = name.replace(/\.svg$/i, ''); sel.appendChild(opt);
+        }
+        sel.value = name;
+        _applyMask(name, generate);
+    },
+
+    _commitAndRender() { this._commit(); this.render(); },
+
+    render() {
+        if (!this.overlay || !this.active) return;
+        this._syncOverlay();
+        const ctx = this.octx, W = this.overlay.width, H = this.overlay.height;
+        ctx.clearRect(0, 0, W, H);
+        for (const s of this.shapes) this._drawShape(ctx, W, s, s.id === this.selected);
+    },
+
+    _drawShape(ctx, W, s, isSel) {
+        ctx.save();
+        const SEL = '#29e', NORM = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = isSel ? 2.5 : 1.5;
+        if (s.type === 'circle') {
+            const c   = this._toP(s.cx, s.cy);
+            const rxx = Math.abs(this._toP(s.cx + s.rx, s.cy).x - c.x) || 1;
+            const ryy = Math.abs(this._toP(s.cx, s.cy - s.ry).y - c.y) || 1;
+            ctx.beginPath(); ctx.ellipse(c.x, c.y, rxx, ryy, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
+            ctx.strokeStyle = isSel ? SEL : NORM; ctx.stroke();
+        } else if (s.type === 'rect') {
+            const tl = this._toP(s.x, s.y), br = this._toP(s.x + s.w, s.y + s.h);
+            const rw = br.x - tl.x, rh = br.y - tl.y;
+            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.fillRect(tl.x, tl.y, rw, rh);
+            ctx.strokeStyle = isSel ? SEL : NORM;
+            ctx.strokeRect(tl.x, tl.y, rw, rh);
+        } else if (s.type === 'line') {
+            const p1 = this._toP(s.x1, s.y1), p2 = this._toP(s.x2, s.y2);
+            ctx.lineWidth = Math.max(4, W * 0.012); ctx.lineCap = 'round';
+            ctx.strokeStyle = isSel ? SEL : NORM;
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+        if (isSel) {
+            ctx.fillStyle = 'white'; ctx.strokeStyle = SEL; ctx.lineWidth = 1.5;
+            for (const hnd of this._handles(s)) {
+                ctx.beginPath();
+                ctx.rect(hnd.x - this.HR, hnd.y - this.HR, this.HR * 2, this.HR * 2);
+                ctx.fill(); ctx.stroke();
+            }
+        }
+        ctx.restore();
+    },
+
+    toSVGString() {
+        const { x, y, w, h } = this.baseViewBox;
+        let extras = '';
+        for (const s of this.shapes) {
+            if (s.type === 'circle')
+                extras += `<ellipse cx="${+s.cx.toFixed(2)}" cy="${+s.cy.toFixed(2)}" rx="${+s.rx.toFixed(2)}" ry="${+s.ry.toFixed(2)}" fill="#000000"/>`;
+            else if (s.type === 'rect')
+                extras += `<rect x="${+s.x.toFixed(2)}" y="${+s.y.toFixed(2)}" width="${+s.w.toFixed(2)}" height="${+s.h.toFixed(2)}" fill="#000000"/>`;
+            else if (s.type === 'line') {
+                const sw = +(w * 0.025).toFixed(2);
+                extras += `<line x1="${+s.x1.toFixed(2)}" y1="${+s.y1.toFixed(2)}" x2="${+s.x2.toFixed(2)}" y2="${+s.y2.toFixed(2)}" stroke="#000000" stroke-width="${sw}" stroke-linecap="round"/>`;
+            }
+        }
+        if (this.baseSVGString)
+            return this.baseSVGString.replace(/<\/svg\s*>/i, extras + '</svg>');
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}">${extras}</svg>`;
+    },
+
+    toDataURL() {
+        return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(this.toSVGString())));
+    },
+
+    saveOverwrite() {
+        if (!this.currentMaskName || this.currentMaskName === '__me_preview__') {
+            this.saveNew(); return;
+        }
+        _maskDataURLs[this.currentMaskName] = this.toDataURL(); maskLoadedSrc = '';
+        document.getElementById('maskSelect').value = this.currentMaskName;
+        loadMask(this.currentMaskName);
+        this._hint('Saved: ' + this.currentMaskName);
+    },
+
+    saveNew() {
+        let name = prompt('New mask name (without .svg):', 'Custom' + Date.now().toString().slice(-4));
+        if (!name) return;
+        if (!name.endsWith('.svg')) name += '.svg';
+        const label = name.replace(/\.svg$/i, '');
+        _maskDataURLs[name] = this.toDataURL(); this.currentMaskName = name;
+        const sel = document.getElementById('maskSelect');
+        if (!Array.from(sel.options).some(o => o.value === name)) {
+            const opt = document.createElement('option'); opt.value = name; opt.textContent = label; sel.appendChild(opt);
+        }
+        sel.value = name; maskLoadedSrc = ''; loadMask(name);
+        this._hint('Saved as: ' + name);
+    },
+};
+
+
+
+
 // --- Simple Pseudo-Random Noise Logic ---
+// --- Properties State ---
+// Each entry: { key: string, type: 'bool'|'int'|'float'|'string', value: any }
+let tileProperties = [];
+let propsApplyToAll = true;
+let exportPreviewEnabled = false;
+let exportPreviewKey = 'thumbnail';
+let exportImageEnabled = false;
+let exportImageKey = 'texture';
+
+function _propDefaultValue(type) {
+    if (type === 'bool') return false;
+    if (type === 'int') return 0;
+    if (type === 'float') return 0.0;
+    return '';
+}
+
+function renderPropList() {
+    const list = document.getElementById('prop-list');
+    if (!list) return;
+    list.innerHTML = '';
+    tileProperties.forEach((prop, i) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; gap:4px; font-size:12px;';
+
+        const keyInp = document.createElement('input');
+        keyInp.type = 'text';
+        keyInp.value = prop.key;
+        keyInp.placeholder = 'key';
+        keyInp.title = 'Property name';
+        keyInp.style.cssText = 'flex:2; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px;';
+        keyInp.addEventListener('change', () => {
+            tileProperties[i].key = keyInp.value.trim();
+            if (propsApplyToAll) _syncPropsToAllTiles();
+        });
+
+        const typeTag = document.createElement('span');
+        typeTag.textContent = prop.type;
+        typeTag.style.cssText = 'flex:0 0 auto; font-size:10px; background:#ddd; border-radius:3px; padding:1px 4px; color:#555;';
+
+        let valEl;
+        if (prop.type === 'bool') {
+            valEl = document.createElement('input');
+            valEl.type = 'checkbox';
+            valEl.checked = !!prop.value;
+            valEl.style.cssText = 'flex:0 0 auto;';
+            valEl.addEventListener('change', () => {
+                tileProperties[i].value = valEl.checked;
+                if (propsApplyToAll) _syncPropsToAllTiles();
+            });
+        } else {
+            valEl = document.createElement('input');
+            valEl.type = prop.type === 'string' ? 'text' : 'number';
+            if (prop.type === 'float') valEl.step = '0.01';
+            if (prop.type === 'int') valEl.step = '1';
+            valEl.value = prop.value;
+            valEl.placeholder = 'value';
+            valEl.style.cssText = 'flex:3; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px;';
+            valEl.addEventListener('change', () => {
+                tileProperties[i].value = prop.type === 'float' ? parseFloat(valEl.value) :
+                    prop.type === 'int' ? parseInt(valEl.value) : valEl.value;
+                if (propsApplyToAll) _syncPropsToAllTiles();
+            });
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '\xd7';
+        delBtn.title = 'Remove property';
+        delBtn.style.cssText = 'flex:0 0 auto; background:#c33 !important; background-image:none !important; color:#fff !important; border:none; border-radius:3px; padding:1px 5px; cursor:pointer; font-size:12px;';
+        delBtn.addEventListener('click', () => {
+            tileProperties.splice(i, 1);
+            _invalidateDOMCache();
+            renderPropList();
+            if (propsApplyToAll) _syncPropsToAllTiles();
+        });
+
+        row.appendChild(keyInp);
+        row.appendChild(typeTag);
+        row.appendChild(valEl);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+    });
+}
+
+function addProp(type) {
+    tileProperties.push({ key: '', type, value: _propDefaultValue(type) });
+    _invalidateDOMCache();
+    renderPropList();
+    if (propsApplyToAll) _syncPropsToAllTiles();
+    // Auto-open the section
+    const sec = document.getElementById('properties-section');
+    if (sec) sec.open = true;
+}
+
+function getPropsSnapshot() {
+    return tileProperties.map(p => Object.assign({}, p));
+}
+
+function setPropsSnapshot(arr) {
+    tileProperties = (arr || []).map(p => Object.assign({}, p));
+    _invalidateDOMCache();
+    renderPropList();
+}
+
+function _syncPropsToAllTiles() {
+    const snap = getPropsSnapshot();
+    carouselTiles.forEach(tile => { tile.properties = snap.map(p => Object.assign({}, p)); });
+}
+
 // --- Carousel State ---
 let carouselTiles = [];
 let carouselCurrentIndex = 0;
+let workspaceScale = 1;
+let workspacePanX = 0;
+let workspacePanY = 0;
+let _spawnCount = 0;
 const carouselListEl = () => document.getElementById('carousel-list');
 const carouselContainerEl = () => document.getElementById('carousel-container');
 const carouselResetOnNewEl = () => document.getElementById('carousel-reset-on-new');
@@ -484,12 +1606,16 @@ function getTilePreviewDataURL() {
 function renderCarousel() {
     const list = carouselListEl();
     list.innerHTML = '';
-    // Get menu background and border color for styling
-    const controlsEl = document.querySelector('.controls');
-    const menuBg = controlsEl ? getComputedStyle(controlsEl).backgroundColor : '#f7f7f7';
-    const menuBorder = controlsEl ? getComputedStyle(controlsEl).color : '#333';
+    // Derive colors from the active theme
+    const _activeThemeKey = (_el('menuTheme') || {}).value || 'default';
+    const _activeTheme = _THEMES[_activeThemeKey] || _THEMES['default'];
+    const menuBg = _activeTheme.menu;
+    const menuBorder = _activeTheme.text;
+    const sectionBg = _activeTheme.section;
     carouselContainerEl().style.background = menuBg;
     carouselContainerEl().style.boxShadow = '0 2px 16px rgba(0,0,0,0.12)';
+    const listEl = carouselListEl();
+    listEl.classList.toggle('needs-scroll', carouselTiles.length >= 7);
     carouselTiles.forEach((tile, idx) => {
         const div = document.createElement('div');
         div.style.display = 'flex';
@@ -498,11 +1624,12 @@ function renderCarousel() {
         div.style.gap = '2px';
         div.style.cursor = 'pointer';
         div.style.opacity = idx === carouselCurrentIndex ? '1' : '0.7';
-        div.style.border = idx === carouselCurrentIndex ? `2px solid ${menuBorder}` : '2px solid #bbb';
+        div.style.border = idx === carouselCurrentIndex ? `2px solid ${menuBorder}` : `2px solid ${_activeTheme.border}`;
         div.style.borderRadius = '8px';
-        div.style.background = menuBg;
+        div.style.background = sectionBg;
         div.style.padding = '2px';
         div.title = 'Click to load tile';
+        div.style.position = 'relative';
         div.setAttribute('data-index', idx);
         const img = document.createElement('img');
         img.src = tile.preview;
@@ -511,10 +1638,32 @@ function renderCarousel() {
         img.style.objectFit = 'cover';
         img.style.borderRadius = '6px';
         div.appendChild(img);
+        // Remove (×) tile button
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '\xd7';
+        removeBtn.title = 'Remove tile';
+        removeBtn.setAttribute('data-remove', idx);
+        removeBtn.style.cssText = 'position:absolute; top:-7px; right:-7px; width:18px; height:18px; border-radius:50%; background:#c33 !important; background-image:none !important; color:#fff !important; border:2px solid white; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; z-index:2; opacity:0; transition:opacity 0.15s;';
+        div.appendChild(removeBtn);
+        div.addEventListener('mouseenter', () => removeBtn.style.opacity = '1');
+        div.addEventListener('mouseleave', () => removeBtn.style.opacity = '0');
+        // Spawn (+) button below thumbnail
+        const spawnBtn = document.createElement('button');
+        spawnBtn.textContent = '+';
+        spawnBtn.title = 'Add to workspace';
+        spawnBtn.setAttribute('data-spawn', idx);
+        spawnBtn.style.cssText = 'width:100%; padding:1px 0; margin-top:2px; background:#4aaa77; color:white; border:none; border-radius:3px; cursor:pointer; font-size:13px; font-weight:bold; line-height:1.3;';
+        div.appendChild(spawnBtn);
         list.appendChild(div);
     });
     // Use event delegation for robust click handling
     list.onclick = function(e) {
+        // Remove button takes priority
+        const removeEl = e.target.closest('[data-remove]');
+        if (removeEl) { removeTile(parseInt(removeEl.getAttribute('data-remove'))); return; }
+        // Spawn button
+        const spawnEl = e.target.closest('[data-spawn]');
+        if (spawnEl) { spawnTileInstance(parseInt(spawnEl.getAttribute('data-spawn'))); return; }
         let target = e.target;
         while (target && target !== list && !target.hasAttribute('data-index')) {
             target = target.parentElement;
@@ -526,8 +1675,10 @@ function renderCarousel() {
                 if (carouselTiles[carouselCurrentIndex]) {
                     carouselTiles[carouselCurrentIndex].state = getAllState();
                     carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+                    carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
                 }
                 carouselCurrentIndex = idx;
+                if (!propsApplyToAll) setPropsSnapshot(carouselTiles[idx].properties || []);
                 setAllState(carouselTiles[idx].state);
                 renderCarousel();
             }
@@ -536,7 +1687,7 @@ function renderCarousel() {
 }
 
 function addTileToCarousel(state, preview) {
-    carouselTiles.push({ state: JSON.parse(JSON.stringify(state)), preview });
+    carouselTiles.push({ state: JSON.parse(JSON.stringify(state)), preview, properties: [] });
     carouselCurrentIndex = carouselTiles.length - 1;
     renderCarousel();
 }
@@ -545,11 +1696,152 @@ function updateCurrentTilePreview() {
     if (carouselTiles[carouselCurrentIndex]) {
         carouselTiles[carouselCurrentIndex].state = getAllState();
         carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+        carouselTiles[carouselCurrentIndex].dataURL = canvasEl.toDataURL();
+        carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
         // Just update the thumbnail image in-place — no full re-render needed
         const list = carouselListEl();
         const imgEl = list.querySelector(`[data-index="${carouselCurrentIndex}"] img`);
         if (imgEl) imgEl.src = carouselTiles[carouselCurrentIndex].preview;
     }
+}
+
+function spawnTileInstance(idx) {
+    const tile = carouselTiles[idx];
+    if (!tile) return;
+    const state = tile.state;
+    const resX = parseInt(state.inputs?.resX) || 600;
+    const resY = parseInt(state.inputs?.resY) || 600;
+    const zoom = parseInt(state.inputs?.canvasZoom || '100') / 100;
+    const dispW = Math.round(resX * zoom);
+    const dispH = Math.round(resY * zoom);
+
+    // Use cached full-res dataURL if available, else fall back to preview
+    const dataURL = (idx === carouselCurrentIndex)
+        ? canvasEl.toDataURL()
+        : (tile.dataURL || tile.preview);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'spawned-tile';
+    // Stagger position to the right of main canvas, cascading down
+    const mainDispW = parseInt(canvasEl.style.width) || canvasEl.width;
+    const stagger = (_spawnCount % 8) * 18;
+    wrapper.style.left = (mainDispW + 20 + stagger) + 'px';
+    wrapper.style.top = stagger + 'px';
+    _spawnCount++;
+
+    const cnv = document.createElement('canvas');
+    cnv.width = resX;
+    cnv.height = resY;
+    cnv.style.width = dispW + 'px';
+    cnv.style.height = dispH + 'px';
+    const img = new Image();
+    img.onload = () => cnv.getContext('2d').drawImage(img, 0, 0, resX, resY);
+    img.src = dataURL;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'tile-close';
+    closeBtn.textContent = '\xd7';
+    closeBtn.title = 'Remove';
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); wrapper.remove(); });
+
+    wrapper.appendChild(cnv);
+    wrapper.appendChild(closeBtn);
+    cnv.classList.toggle('no-shadow', !!_el('hideCanvasShadow')?.checked);
+    document.getElementById('workspace').appendChild(wrapper);
+
+    // Drag handling (accounts for workspace scale)
+    let dragging = false, ox = 0, oy = 0;
+    wrapper.addEventListener('mousedown', (e) => {
+        if (e.target === closeBtn) return;
+        dragging = true;
+        const r = document.getElementById('workspace').getBoundingClientRect();
+        ox = (e.clientX - r.left) / workspaceScale - wrapper.offsetLeft;
+        oy = (e.clientY - r.top)  / workspaceScale - wrapper.offsetTop;
+        wrapper.style.cursor = 'grabbing';
+        wrapper.style.zIndex = '50';
+        e.preventDefault();
+    });
+    const onMove = (e) => {
+        if (!dragging) return;
+        const r = document.getElementById('workspace').getBoundingClientRect();
+        let nx = (e.clientX - r.left) / workspaceScale - ox;
+        let ny = (e.clientY - r.top)  / workspaceScale - oy;
+
+        // Snap to edges/corners of main canvas-wrapper
+        const cw = document.getElementById('canvas-wrapper');
+        const cwL = cw.offsetLeft, cwT = cw.offsetTop;
+        const cwW = cw.offsetWidth, cwH = cw.offsetHeight;
+        const tW = wrapper.offsetWidth, tH = wrapper.offsetHeight;
+        const slots = [
+            [cwL - tW,              cwT - tH             ],  // TL corner
+            [cwL + (cwW - tW) / 2,  cwT - tH             ],  // top center
+            [cwL + cwW,             cwT - tH             ],  // TR corner
+            [cwL - tW,              cwT + (cwH - tH) / 2 ],  // left center
+            [cwL + cwW,             cwT + (cwH - tH) / 2 ],  // right center
+            [cwL - tW,              cwT + cwH            ],  // BL corner
+            [cwL + (cwW - tW) / 2,  cwT + cwH            ],  // bottom center
+            [cwL + cwW,             cwT + cwH            ],  // BR corner
+        ];
+        const SNAP = 60;
+        let bestDist = SNAP, snapX = null, snapY = null;
+        for (const [sx, sy] of slots) {
+            const d = Math.hypot(nx - sx, ny - sy);
+            if (d < bestDist) { bestDist = d; snapX = sx; snapY = sy; }
+        }
+        if (snapX !== null) { nx = snapX; ny = snapY; }
+        wrapper.classList.toggle('snap-active', snapX !== null);
+        wrapper.style.left = nx + 'px';
+        wrapper.style.top  = ny + 'px';
+    };
+    const onUp = () => { if (dragging) { dragging = false; wrapper.style.cursor = 'grab'; wrapper.style.zIndex = '5'; wrapper.classList.remove('snap-active'); } };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+
+    // Touch drag + tap-to-reveal close button
+    let touchMoved = false;
+    wrapper.addEventListener('touchstart', (e) => {
+        if (e.target === closeBtn) return;
+        touchMoved = false;
+        const touch = e.touches[0];
+        dragging = true;
+        const r = document.getElementById('workspace').getBoundingClientRect();
+        ox = (touch.clientX - r.left) / workspaceScale - wrapper.offsetLeft;
+        oy = (touch.clientY - r.top)  / workspaceScale - wrapper.offsetTop;
+        wrapper.style.zIndex = '50';
+        e.preventDefault();
+    }, { passive: false });
+    wrapper.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        touchMoved = true;
+        onMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+        e.preventDefault();
+    }, { passive: false });
+    wrapper.addEventListener('touchend', () => {
+        if (!touchMoved) wrapper.classList.toggle('touch-active');
+        onUp();
+    });
+}
+
+function removeTile(idx) {
+    if (carouselTiles.length <= 1) {
+        alert('At least one tile must remain in the carousel.');
+        return;
+    }
+    const confirmed = confirm(
+        `Remove tile ${idx + 1}?\n\n` +
+        `This tile will be permanently deleted from the carousel. ` +
+        `Any changes that haven't been saved to a file will be lost.\n\n` +
+        `This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    carouselTiles.splice(idx, 1);
+    // Adjust current index
+    if (carouselCurrentIndex >= carouselTiles.length) {
+        carouselCurrentIndex = carouselTiles.length - 1;
+    }
+    if (!propsApplyToAll) setPropsSnapshot(carouselTiles[carouselCurrentIndex].properties || []);
+    setAllState(carouselTiles[carouselCurrentIndex].state);
+    renderCarousel();
 }
 
 function handleCarouselPlus() {
@@ -558,28 +1850,48 @@ function handleCarouselPlus() {
     if (carouselTiles.length > 0) {
         carouselTiles[carouselCurrentIndex].state = getAllState();
         carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+        carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
     }
     // Build state for the new tile
     const newState = carouselResetOnNewEl().checked
         ? getDefaultState()
         : JSON.parse(JSON.stringify(getAllState()));
+    const newProps = propsApplyToAll ? getPropsSnapshot() : getPropsSnapshot();
     // Switch to the new tile BEFORE calling setAllState so the
     // auto-save in updateCurrentTilePreview targets the new slot
-    carouselTiles.push({ state: newState, preview: '' });
+    carouselTiles.push({ state: newState, preview: '', properties: newProps });
     carouselCurrentIndex = carouselTiles.length - 1;
+    setPropsSnapshot(newProps);
     setAllState(newState);   // triggers generate → updateCurrentTilePreview fills preview
     renderCarousel();
 }
 
 function getDefaultState() {
-    // Create a default state by resetting all UI
-    // We'll simulate by reloading the page and capturing state, but here just use initial values
-    const dummy = document.createElement('div');
-    dummy.innerHTML = `<input id='resX' value='600'><input id='resY' value='600'><input id='canvasZoom' value='100'><input id='menuBrightness' value='10'><input id='invert' type='checkbox'><input id='scale' value='40'><input id='octaves' value='6'><input id='persistence' value='0.8'><input id='power' value='1'><input id='blur' value='0'><input id='pixelation' value='1'><input id='seed' value='12345'><input id='color1' value='#582b13'><input id='color2' value='#63321d'><input id='shapesEnabled' type='checkbox'><input id='pixelateMinerals' type='checkbox' checked><input id='shapeType' value='diamond'><input id='shapeCount' value='5'><input id='shapeSize' value='30'><input id='shapeFacets' value='6'><input id='customEdges' value='50'><input id='shapeDepth' value='50'><input id='shapeOpacity' value='80'><input id='shapeRotation' value='0'><input id='shapeArea' value='70'>`;
-    // Use getAllState after setting these values
-    // Instead, just return a deep copy of the first tile if exists, else current state
+    // Return a deep copy of tile 0 if available, otherwise the current state
     if (carouselTiles.length > 0) return JSON.parse(JSON.stringify(carouselTiles[0].state));
     return JSON.parse(JSON.stringify(getAllState()));
+}
+
+function getDefaultPerlynxParams() {
+    return {
+        inputs: {
+            resX: '256', resY: '256',
+            scale: '40', octaves: '6', persistence: '0.8', power: '1',
+            blur: '0', pixelation: '1', seed: '12345', invert: false,
+            shapesEnabled: false, pixelateMinerals: true,
+            shapeType: 'diamond', shapeCount: '5', shapeSize: '30',
+            shapeFacets: '6', customEdges: '50', shapeDepth: '50',
+            shapeOpacity: '80', shapeRotation: '0', shapeArea: '70',
+            cmPerlinEnabled: false,
+            cm_scale: '20', cm_octaves: '4', cm_persistence: '0.5',
+            cm_power: '1', cm_blur: '0', cm_pixelation: '1', cm_seed: '42'
+        },
+        colors: ['#582b13', '#63321d'],
+        cmColors: ['#888888', '#aaaaaa', '#cccccc', '#eeeeee'],
+        mineralsArray: [],
+        mineralScatterSeed: 0,
+        maskDataURLs: {}
+    };
 }
 
 function carouselInit() {
@@ -593,8 +1905,8 @@ function carouselInit() {
 // --- Save/Load State Logic ---
 function getAllState() {
     // Gather all input values
-    const state = { inputs: {}, colors: [], mineralsArray: [], cmColors: [] };
-    document.querySelectorAll('.controls input, .controls select').forEach(inp => {
+    const state = { inputs: {}, colors: [], mineralsArray: [], cmColors: [], properties: getPropsSnapshot() };
+    document.querySelectorAll('.controls input, .controls select, #customPanel input, #customPanel select').forEach(inp => {
         if (inp.type === 'checkbox') state.inputs[inp.id] = inp.checked;
         else state.inputs[inp.id] = inp.value;
     });
@@ -602,27 +1914,47 @@ function getAllState() {
     state.colors = Array.from(document.querySelectorAll('#colorContainer input[type="color"]')).map(inp => inp.value);
     // Gather custom material colors
     state.cmColors = Array.from(document.querySelectorAll('#cm_colorContainer input[type="color"]')).map(inp => inp.value);
-    // Gather mineralsArray
-    state.mineralsArray = mineralsArray.map(m => Object.assign({}, m));
+    // Gather mineralsArray (exclude _customOutline — it's regenerated at render time)
+    state.mineralsArray = mineralsArray.map(m => { const {_customOutline, ...rest} = m; return rest; });
     state.mineralScatterSeed = mineralScatterSeed;
+    // Save all custom mask SVG data so masks survive save/load
+    state.maskDataURLs = Object.assign({}, _maskDataURLs);
     return state;
 }
 
 function getAllTilesState() {
-    // Save all tiles for export
-    return carouselTiles.map(tile => ({ state: tile.state, preview: tile.preview }));
+    // Ensure current tile properties are up to date
+    if (carouselTiles.length > 0) carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
+    return carouselTiles.map(tile => ({ state: tile.state, preview: tile.preview, properties: tile.properties || [] }));
 }
 
 function setAllTilesState(tiles) {
-    carouselTiles = tiles.map(tile => ({ state: tile.state, preview: tile.preview }));
+    carouselTiles = tiles.map(tile => ({ state: tile.state, preview: tile.preview, properties: tile.properties || [] }));
     carouselCurrentIndex = 0;
     if (carouselTiles.length > 0) {
+        setPropsSnapshot(carouselTiles[0].properties || []);
         setAllState(carouselTiles[0].state);
     }
     renderCarousel();
 }
 
 function setAllState(state) {
+    // Restore custom mask SVG data first so the select + mask apply correctly
+    if (state.maskDataURLs) {
+        Object.assign(_maskDataURLs, state.maskDataURLs);
+        // Ensure any saved custom masks appear as options in the select
+        const sel = document.getElementById('maskSelect');
+        if (sel) {
+            Object.keys(state.maskDataURLs).forEach(name => {
+                if (!Array.from(sel.options).some(o => o.value === name)) {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name.replace(/\.svg$/i, '');
+                    sel.appendChild(opt);
+                }
+            });
+        }
+    }
     // Restore all input values
     for (const [id, val] of Object.entries(state.inputs || {})) {
         const inp = document.getElementById(id);
@@ -652,6 +1984,8 @@ function setAllState(state) {
     mineralsArray = (state.mineralsArray || []).map(m => Object.assign({}, m));
     mineralScatterSeed = state.mineralScatterSeed || 0;
     mineralsArrayLoadedFromState = true;
+    // Restore properties
+    if (state.properties !== undefined) setPropsSnapshot(state.properties);
     // Update UI
     updateCustomPanelVisibility();
     // Sync mask image to match restored maskSelect value, then generate
@@ -665,16 +1999,144 @@ function setAllState(state) {
     });
 }
 
-function saveStateToFile() {
-    const allTiles = getAllTilesState();
-    const blob = new Blob([JSON.stringify({ tiles: allTiles }, null, 2)], {type: 'application/json'});
+// UI-only inputs excluded from exported JSON (kept cached in session only)
+const UI_ONLY_INPUTS = new Set(['canvasZoom', 'canvasZoom_num', 'menuTheme', 'hideCanvasShadow', 'carousel-reset-on-new']);
+
+function _getRenderState() {
+    const state = getAllState();
+    UI_ONLY_INPUTS.forEach(k => delete state.inputs[k]);
+    return state;
+}
+
+function _perlynxFromState(state) {
+    return {
+        inputs: state.inputs,
+        colors: state.colors,
+        cmColors: state.cmColors,
+        mineralsArray: state.mineralsArray,
+        mineralScatterSeed: state.mineralScatterSeed || 0,
+        maskDataURLs: state.maskDataURLs || {}
+    };
+}
+
+function _stateFromPerlynx(perlynx) {
+    return {
+        inputs: perlynx.inputs || {},
+        colors: perlynx.colors || [],
+        cmColors: perlynx.cmColors || [],
+        mineralsArray: perlynx.mineralsArray || [],
+        mineralScatterSeed: perlynx.mineralScatterSeed || 0,
+        maskDataURLs: perlynx.maskDataURLs || {}
+    };
+}
+
+async function exportToFile() {
+    // Snapshot current tile
+    if (carouselTiles[carouselCurrentIndex]) {
+        carouselTiles[carouselCurrentIndex].state = getAllState();
+        carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+        carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
+    }
+    const savedIndex = carouselCurrentIndex;
+    const previewKey = (document.getElementById('export-preview-key').value || '').trim() || 'thumbnail';
+    const imageKey   = (document.getElementById('export-image-key').value  || '').trim() || 'texture';
+    const doPreview  = document.getElementById('export-preview-enabled').checked;
+    const doImage    = document.getElementById('export-image-enabled').checked;
+
+    const tiles = [];
+    for (let i = 0; i < carouselTiles.length; i++) {
+        const tile = carouselTiles[i];
+        const renderState = (() => { const s = Object.assign({}, tile.state, { inputs: Object.assign({}, tile.state.inputs) }); UI_ONLY_INPUTS.forEach(k => delete s.inputs[k]); return s; })();
+        const entry = {
+            _preview: tile.preview || '',
+            properties: tile.properties || [],
+            perlynx: _perlynxFromState(renderState)
+        };
+        if (doPreview) entry[previewKey] = tile.preview || '';
+        if (doImage) {
+            if (i === savedIndex) {
+                entry[imageKey] = canvasEl.toDataURL();
+            } else {
+                await new Promise(resolve => {
+                    carouselCurrentIndex = i;
+                    const origGenerate = generate;
+                    const once = function() {
+                        generate = origGenerate;
+                        entry[imageKey] = canvasEl.toDataURL();
+                        resolve();
+                    };
+                    generate = function() { origGenerate.apply(this, arguments); once(); };
+                    setAllState(tile.state);
+                });
+            }
+        }
+        tiles.push(entry);
+    }
+
+    // Restore original tile
+    if (carouselCurrentIndex !== savedIndex) {
+        carouselCurrentIndex = savedIndex;
+        setAllState(carouselTiles[savedIndex].state);
+        setPropsSnapshot(carouselTiles[savedIndex].properties || []);
+        renderCarousel();
+    }
+
+    const exportSettings = { exportPreviewEnabled: doPreview, exportPreviewKey: previewKey, exportImageEnabled: doImage, exportImageKey: imageKey };
+    const blob = new Blob([JSON.stringify({ tiles, propsApplyToAll, exportSettings }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'perlynx-state.json';
+    a.download = 'perlynx.json';
     a.click();
 }
 
-function loadStateFromFile() {
+function _parseTilesFromData(data) {
+    // Returns array of { state, preview, properties } or null if unrecognised
+    if (data.tiles && data.tiles.length) {
+        const firstTile = data.tiles[0];
+        if (firstTile.perlynx) {
+            return data.tiles.map(t => ({
+                state: _stateFromPerlynx(t.perlynx),
+                preview: t._preview || '',
+                properties: t.properties || []
+            }));
+        } else {
+            return data.tiles.map(t => ({
+                state: t.state,
+                preview: t.preview || '',
+                properties: t.properties || []
+            }));
+        }
+    } else if (data.inputs) {
+        // Very old single-tile format
+        return [{ state: data, preview: '', properties: data.properties || [] }];
+    }
+    return null;
+}
+
+function _applyExportSettings(data) {
+    if (data.propsApplyToAll !== undefined) {
+        propsApplyToAll = !!data.propsApplyToAll;
+        const cb = document.getElementById('props-apply-all');
+        if (cb) cb.checked = propsApplyToAll;
+    }
+    if (data.exportSettings) {
+        const es = data.exportSettings;
+        exportPreviewEnabled = !!es.exportPreviewEnabled;
+        exportPreviewKey = es.exportPreviewKey || 'thumbnail';
+        exportImageEnabled = !!es.exportImageEnabled;
+        exportImageKey = es.exportImageKey || 'texture';
+        const epCb = document.getElementById('export-preview-enabled');
+        const eiCb = document.getElementById('export-image-enabled');
+        const epKey = document.getElementById('export-preview-key');
+        const eiKey = document.getElementById('export-image-key');
+        if (epCb) { epCb.checked = exportPreviewEnabled; if (epKey) epKey.style.display = exportPreviewEnabled ? '' : 'none'; }
+        if (eiCb) { eiCb.checked = exportImageEnabled; if (eiKey) eiKey.style.display = exportImageEnabled ? '' : 'none'; }
+        if (epKey) epKey.value = exportPreviewKey;
+        if (eiKey) eiKey.value = exportImageKey;
+    }
+}
+
+function openFromFile() {
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = '.json,application/json';
@@ -685,23 +2147,48 @@ function loadStateFromFile() {
         reader.onload = evt => {
             try {
                 const data = JSON.parse(evt.target.result);
-                if (data.tiles) {
-                    setAllTilesState(data.tiles);
-                } else {
-                    setAllState(data);
-                    // If old format, add as single tile
-                    carouselTiles = [{ state: data, preview: getTilePreviewDataURL() }];
-                    carouselCurrentIndex = 0;
-                    renderCarousel();
-                }
+                const tiles = _parseTilesFromData(data);
+                if (!tiles) return alert('Unrecognised file format.');
+                setAllTilesState(tiles);
+                _applyExportSettings(data);
             } catch (err) {
-                alert('Failed to load state: ' + err);
+                alert('Failed to open: ' + err);
             }
         };
         reader.readAsText(file);
     };
     inp.click();
 }
+
+function importFromFile() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = evt => {
+            try {
+                const data = JSON.parse(evt.target.result);
+                const tiles = _parseTilesFromData(data);
+                if (!tiles) return alert('Unrecognised file format.');
+                const insertIndex = carouselTiles.length;
+                tiles.forEach(t => carouselTiles.push({ state: t.state, preview: t.preview, properties: t.properties }));
+                carouselCurrentIndex = insertIndex;
+                setPropsSnapshot(carouselTiles[insertIndex].properties || []);
+                setAllState(carouselTiles[insertIndex].state);
+                renderCarousel();
+            } catch (err) {
+                alert('Failed to import: ' + err);
+            }
+        };
+        reader.readAsText(file);
+    };
+    inp.click();
+}
+
+// NOTE: SimpleNoise and generateCustomOutline below mirror perlynx.js — keep logic in sync.
 class SimpleNoise {
     constructor(seed) {
         this.p = new Uint8Array(512);
@@ -745,7 +2232,7 @@ class SimpleNoise {
     }
 }
 
-let colorIndex = 2;
+let colorIndex = 2; // color1 and color2 are static HTML; dynamic colors start at index 3
 
 function addColor() {
     colorIndex++;
@@ -797,6 +2284,91 @@ function debouncedGenerate() {
 function getContrastColor(r, g, b) {
     const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
     return luminance > 150 ? 'black' : 'white';
+}
+
+// --- Themes ---
+const _THEMES = {
+    'default':            { menu: '#2c2c2c', section: '#3a3a3a', text: 'white',   border: '#555',  texBtn: false },
+    'dark':               { menu: '#181818', section: '#242424', text: '#ddd',    border: '#444',  texBtn: false },
+    'retro':              { menu: '#d6c9a0', section: '#c4b47a', text: '#3b2a00', border: '#a08a55', texBtn: true  },
+    'modern':             { menu: '#ffffff', section: '#f0f0f0', text: '#111',    border: '#ccc',  texBtn: true  },
+    'slate':              { menu: '#2e3440', section: '#3b4252', text: '#d8dee9', border: '#4c566a', texBtn: false },
+    'high-contrast-dark': { menu: '#000000', section: '#111111', text: '#ffff00', border: '#ffff00', texBtn: false },
+    'high-contrast-light':{ menu: '#ffffff', section: '#eeeeee', text: '#000000', border: '#000000', texBtn: false },
+    'solarized':          { menu: '#002b36', section: '#073642', text: '#839496', border: '#586e75', texBtn: false },
+    'midnight':           { menu: '#0d1b2a', section: '#1b2a3f', text: '#7ec8e3', border: '#1e3a5f', texBtn: false },
+    'forest':             { menu: '#1e2d1e', section: '#2a3d2a', text: '#a8d5a2', border: '#4a7a44', texBtn: false },
+};
+
+function applyTheme(themeKey, dataURL) {
+    const t = _THEMES[themeKey] || _THEMES['default'];
+    const [mr, mg, mb] = hexToRgb(t.menu.startsWith('rgb') ? '#808080' : t.menu);
+    const contrast = t.text;
+    const menuBg   = t.menu;
+    const sectionBg = t.section;
+    const borderCol = t.border;
+
+    document.querySelector('h1').style.backgroundImage = `url(${dataURL})`;
+    document.querySelectorAll('.texture-text').forEach(el => el.style.backgroundImage = `url(${dataURL})`);
+    const fillImg = document.getElementById('perlin-fill-img');
+    if (fillImg) fillImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
+
+    _allButtons().forEach(btn => {
+        if (t.texBtn) {
+            btn.style.backgroundImage = `url(${dataURL})`;
+        } else {
+            btn.style.backgroundImage = 'none';
+            btn.style.backgroundColor = sectionBg;
+        }
+        btn.style.color = contrast;
+    });
+
+    const controlsEl = document.querySelector('.controls');
+    controlsEl.style.backgroundColor = menuBg;
+    controlsEl.style.color = contrast;
+    controlsEl.style.setProperty('--thumb-color', contrast);
+    document.querySelector('.colors-section').style.backgroundColor = sectionBg;
+    document.querySelector('.colors-section').style.color = contrast;
+    document.body.style.backgroundColor = sectionBg;
+    _allLabels().forEach(label => label.style.color = contrast);
+    _allSummaries().forEach(s => s.style.color = contrast);
+    document.querySelectorAll('.shapes-section').forEach(s => { s.style.backgroundColor = sectionBg; s.style.color = contrast; });
+    const cmPanel = document.getElementById('customPanel');
+    if (cmPanel) {
+        cmPanel.style.backgroundColor = menuBg;
+        cmPanel.style.color = contrast;
+        cmPanel.style.setProperty('--thumb-color', contrast);
+        const cmColSec = cmPanel.querySelector('.cm-colors-section');
+        if (cmColSec) { cmColSec.style.backgroundColor = sectionBg; cmColSec.style.color = contrast; }
+    }
+    document.querySelectorAll('.controls select').forEach(sel => {
+        sel.style.backgroundColor = sectionBg;
+        sel.style.borderColor = borderCol;
+        sel.style.color = contrast;
+    });
+    _allInputs().forEach(inp => {
+        if (inp.type === 'checkbox') {
+            inp.style.accentColor = contrast;
+        } else {
+            inp.style.backgroundColor = sectionBg;
+            inp.style.borderColor = borderCol;
+            inp.style.color = contrast;
+        }
+    });
+    // Style carousel container
+    const cc = document.getElementById('carousel-container');
+    if (cc) {
+        cc.style.backgroundColor = menuBg;
+        cc.style.color = contrast;
+        cc.querySelectorAll('label').forEach(l => l.style.color = contrast);
+        cc.querySelectorAll('input[type="checkbox"]').forEach(i => i.style.accentColor = contrast);
+        const plusBtn = document.getElementById('carousel-plus');
+        if (plusBtn) {
+            plusBtn.style.backgroundColor = sectionBg;
+            plusBtn.style.color = contrast;
+            plusBtn.style.borderColor = borderCol;
+        }
+    }
 }
 
 function hexToRgb(hex) {
@@ -1107,7 +2679,7 @@ function getMineralFacets(type, half, numFacets, rng, depth) {
 
 // Lazy-cached DOM queries for theming
 let _cachedButtons, _cachedLabels, _cachedInputs, _cachedSummaries;
-const _allButtons = () => _cachedButtons || (_cachedButtons = document.querySelectorAll('button:not(#menu-toggle)'));
+const _allButtons = () => _cachedButtons || (_cachedButtons = document.querySelectorAll('.controls button:not([data-no-theme])'));
 const _allLabels = () => _cachedLabels || (_cachedLabels = document.querySelectorAll('label'));
 const _allInputs = () => _cachedInputs || (_cachedInputs = document.querySelectorAll('.input-row input, .control-group input'));
 const _allSummaries = () => _cachedSummaries || (_cachedSummaries = document.querySelectorAll('.controls summary'));
@@ -1130,6 +2702,7 @@ function generate() {
     const canvasZoom = parseInt(_el('canvasZoom').value) / 100;
     canvas.style.width = Math.round(resX * canvasZoom) + 'px';
     canvas.style.height = Math.round(resY * canvasZoom) + 'px';
+    canvas.classList.toggle('no-shadow', !!_el('hideCanvasShadow')?.checked);
 
     const scaleInput = parseFloat(_el('scale').value);
     const octaves = parseInt(_el('octaves').value);
@@ -1537,6 +3110,9 @@ function generate() {
         drawCtx.globalAlpha = 1;
     }
 
+    // Capture texture before mask for UI theming (buttons/header/favicon should show full texture)
+    const uiTexDataURL = canvas.toDataURL();
+
     // Apply SVG mask: keep only pixels inside the mask shape
     if (maskImage) {
         ctx.save();
@@ -1547,17 +3123,7 @@ function generate() {
 
     const isInteracting = isDraggingMineral || isResizingMineral || isRotatingMineral;
     if (!isInteracting) {
-        const brightness = parseInt(_el('menuBrightness').value);
-        const menuColor = Math.round(25 + brightness * 1.8);
-        const menuBg = `rgb(${menuColor}, ${menuColor}, ${menuColor})`;
-        const sectionColor = Math.min(menuColor + 20, 255);
-        const sectionBg = `rgb(${sectionColor}, ${sectionColor}, ${sectionColor})`;
-        const contrast = getContrastColor(menuColor, menuColor, menuColor);
-
-        const dataURL = canvas.toDataURL();
-        document.querySelector('h1').style.backgroundImage = `url(${dataURL})`;
-        const fillImg = document.getElementById('perlin-fill-img');
-        if (fillImg) fillImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
+        const themeKey = (_el('menuTheme') || {}).value || 'default';
 
         // Update favicon with perlin-filled logo
         const svgStr = new XMLSerializer().serializeToString(_el('perlynx-logo'));
@@ -1572,46 +3138,11 @@ function generate() {
             URL.revokeObjectURL(blobUrl);
             _el('favicon').href = generate._favCanvas.toDataURL('image/png');
         };
+        favImg.onerror = () => URL.revokeObjectURL(blobUrl);
         favImg.src = blobUrl;
 
-        _allButtons().forEach(btn => {
-            btn.style.backgroundImage = `url(${dataURL})`;
-            btn.style.color = contrast;
-        });
-        const controlsEl = document.querySelector('.controls');
-        const colorsSection = document.querySelector('.colors-section');
-        controlsEl.style.backgroundColor = menuBg;
-        controlsEl.style.color = contrast;
-        colorsSection.style.backgroundColor = sectionBg;
-        colorsSection.style.color = contrast;
-        document.body.style.backgroundColor = sectionBg;
-        controlsEl.style.setProperty('--thumb-color', contrast);
-        _allLabels().forEach(label => label.style.color = contrast);
-        _allSummaries().forEach(s => s.style.color = contrast);
-        const shapesSection = document.querySelector('.shapes-section');
-        if (shapesSection) { shapesSection.style.backgroundColor = sectionBg; shapesSection.style.color = contrast; }
-        const cmPanel = document.getElementById('customPanel');
-        if (cmPanel) {
-            cmPanel.style.backgroundColor = menuBg;
-            cmPanel.style.color = contrast;
-            cmPanel.style.setProperty('--thumb-color', contrast);
-            const cmColSec = cmPanel.querySelector('.cm-colors-section');
-            if (cmColSec) { cmColSec.style.backgroundColor = sectionBg; cmColSec.style.color = contrast; }
-        }
-        document.querySelectorAll('.controls select').forEach(sel => {
-            sel.style.backgroundColor = sectionBg;
-            sel.style.borderColor = contrast === 'black' ? '#888' : '#ccc';
-            sel.style.color = contrast;
-        });
-        _allInputs().forEach(inp => {
-            if (inp.type === 'checkbox') {
-                inp.style.accentColor = contrast;
-            } else {
-                inp.style.backgroundColor = sectionBg;
-                inp.style.borderColor = contrast === 'black' ? '#888' : '#ccc';
-                inp.style.color = contrast;
-            }
-        });
+        applyTheme(themeKey, uiTexDataURL);
+        renderCarousel(); // re-tint carousel to match new theme
     } // end if (!isInteracting)
 }
 
@@ -1641,6 +3172,12 @@ document.querySelectorAll('input').forEach(input => {
     }
 });
 
+document.getElementById('hideCanvasShadow').addEventListener('change', function() {
+    document.querySelectorAll('.spawned-tile canvas').forEach(c => c.classList.toggle('no-shadow', this.checked));
+});
+
+document.getElementById('menuTheme').addEventListener('change', generate);
+
 document.getElementById('shapeType').addEventListener('change', () => {
     updateCustomPanelVisibility();
     debouncedGenerate();
@@ -1664,26 +3201,196 @@ document.getElementById('btn-add-color').addEventListener('click', addColor);
 document.getElementById('btn-remove-color').addEventListener('click', removeColor);
 document.getElementById('btn-scatter').addEventListener('click', scatterMinerals);
 
-// Save/Load state event listeners
+// Properties buttons
+document.getElementById('btn-prop-reset').addEventListener('click', () => {
+    if (tileProperties.length === 0) return;
+    const msg = propsApplyToAll && carouselTiles.length > 1
+        ? 'Are you sure? This will reset all properties on all tiles.'
+        : 'Reset all properties on this tile?';
+    if (!confirm(msg)) return;
+    setPropsSnapshot([]);
+    if (propsApplyToAll) _syncPropsToAllTiles();
+});
 
-document.getElementById('btn-save-state').addEventListener('click', saveStateToFile);
-document.getElementById('btn-load-state').addEventListener('click', loadStateFromFile);
+document.getElementById('btn-prop-add-bool').addEventListener('click', () => addProp('bool'));
+document.getElementById('btn-prop-add-int').addEventListener('click', () => addProp('int'));
+document.getElementById('btn-prop-add-float').addEventListener('click', () => addProp('float'));
+document.getElementById('btn-prop-add-string').addEventListener('click', () => addProp('string'));
+
+document.getElementById('props-apply-all').addEventListener('change', function() {
+    if (this.checked) {
+        if (carouselTiles.length > 1) {
+            const ok = confirm(
+                'Apply current properties to ALL tiles?\n\n' +
+                'This will replace the individual properties of every other tile with ' +
+                'the current tile\'s properties.\n\nThis cannot be undone.'
+            );
+            if (!ok) { this.checked = false; return; }
+        }
+        propsApplyToAll = true;
+        _syncPropsToAllTiles();
+    } else {
+        propsApplyToAll = false;
+    }
+});
+
+// Export image field listeners
+document.getElementById('export-preview-enabled').addEventListener('change', function() {
+    document.getElementById('export-preview-key').style.display = this.checked ? '' : 'none';
+    exportPreviewEnabled = this.checked;
+});
+document.getElementById('export-image-enabled').addEventListener('change', function() {
+    document.getElementById('export-image-key').style.display = this.checked ? '' : 'none';
+    exportImageEnabled = this.checked;
+});
+document.getElementById('export-preview-key').addEventListener('change', function() { exportPreviewKey = this.value.trim() || 'thumbnail'; });
+document.getElementById('export-image-key').addEventListener('change', function() { exportImageKey = this.value.trim() || 'texture'; });
+
+// Save/Load state event listeners
+document.getElementById('btn-export').addEventListener('click', exportToFile);
+document.getElementById('btn-open').addEventListener('click', openFromFile);
+document.getElementById('btn-import').addEventListener('click', importFromFile);
 document.getElementById('maskSelect').addEventListener('change', function() {
     loadMask(this.value);
+    if (ME.active && this.value) {
+        const url = _maskDataURLs[this.value];
+        if (url) ME._parseSVG(url);
+        else { ME.shapes = []; ME.currentMaskName = this.value; }
+        ME.currentMaskName = this.value;
+        ME.render();
+    }
 });
 document.getElementById('carousel-plus').addEventListener('click', handleCarouselPlus);
 document.getElementById('carousel-reset-on-new').checked = false;
+
+// Touch: tap a carousel tile to reveal its ✕ remove badge
+document.getElementById('carousel-list').addEventListener('click', (e) => {
+    const list = document.getElementById('carousel-list');
+    if (e.target.closest('[data-remove]') || e.target.closest('[data-spawn]')) return;
+    list.querySelectorAll('[data-remove]').forEach(b => b.style.opacity = '0');
+    const tileDiv = e.target.closest('[data-index]');
+    if (tileDiv) {
+        const removeBtn = tileDiv.querySelector('[data-remove]');
+        if (removeBtn) removeBtn.style.opacity = '1';
+    }
+});
 
 // Update preview on every generate
 const origGenerate = generate;
 generate = function() {
     origGenerate.apply(this, arguments);
     updateCurrentTilePreview();
+    if (ME.active) ME.render();
 };
 
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(carouselInit, 200);
+    initMasks();
 });
+
+document.getElementById('btn-mask-file').addEventListener('click', pickMaskFile);
+document.getElementById('btn-mask-folder').addEventListener('click', pickMasksFolder);
+
+// Mask Editor event listeners
+document.getElementById('btn-mask-editor').addEventListener('click', () => ME.toggle());
+document.getElementById('btn-me-file').addEventListener('click', () => document.getElementById('meFileInput').click());
+document.getElementById('meFileInput').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        _maskDataURLs[file.name] = e.target.result;
+        const sel = document.getElementById('maskSelect');
+        if (!Array.from(sel.options).some(o => o.value === file.name)) {
+            const opt = document.createElement('option'); opt.value = file.name; opt.textContent = file.name.replace(/\.svg$/i,''); sel.appendChild(opt);
+        }
+        sel.value = file.name;
+        if (ME.active) ME._parseSVG(e.target.result); else loadMask(file.name);
+        ME.currentMaskName = file.name;
+    };
+    reader.readAsDataURL(file); this.value = '';
+});
+document.getElementById('btn-me-circle').addEventListener('click', () => ME.addShape('circle'));
+document.getElementById('btn-me-rect').addEventListener('click',   () => ME.addShape('rect'));
+document.getElementById('btn-me-line').addEventListener('click',   () => ME.addShape('line'));
+document.getElementById('btn-me-delete').addEventListener('click', () => ME.deleteSelected());
+document.getElementById('btn-me-save-over').addEventListener('click', () => ME.saveOverwrite());
+document.getElementById('btn-me-save-new').addEventListener('click',  () => ME.saveNew());
+document.addEventListener('keydown', e => {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && ME.active && ME.selected &&
+        !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+        ME.deleteSelected(); e.preventDefault();
+    }
+});
+
+// Ctrl+wheel: zoom entire workspace
+// Keep transform-origin:0 0 fixed; adjust translate so the cursor point stays stationary.
+// Formula: after scale change, panX_new = panX + lx*(oldScale - newScale)
+// where lx = cursor's local (pre-transform) x = (clientX - rect.left) / oldScale
+function _applyWorkspaceTransform() {
+    const ws = document.getElementById('workspace');
+    ws.style.transformOrigin = '0 0';
+    ws.style.transform = `translate(${workspacePanX}px,${workspacePanY}px) scale(${workspaceScale})`;
+}
+// Carousel: convert vertical wheel to horizontal scroll
+document.getElementById('carousel-list').addEventListener('wheel', (e) => {
+    if (e.ctrlKey) return; // let workspace zoom handler take it
+    const list = e.currentTarget;
+    if (list.scrollWidth > list.clientWidth) {
+        list.scrollLeft += e.deltaY || e.deltaX;
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}, { passive: false });
+
+document.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const ws = document.getElementById('workspace');
+    const rect = ws.getBoundingClientRect();
+    // Cursor in workspace local (pre-transform) coordinates
+    const lx = (e.clientX - rect.left) / workspaceScale;
+    const ly = (e.clientY - rect.top)  / workspaceScale;
+    const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    const newScale = Math.max(0.05, Math.min(10, workspaceScale * factor));
+    // Adjust pan so the local point under the cursor stays fixed on screen
+    workspacePanX += lx * (workspaceScale - newScale);
+    workspacePanY += ly * (workspaceScale - newScale);
+    workspaceScale = newScale;
+    _applyWorkspaceTransform();
+}, { passive: false });
+
+// Touch pinch-to-zoom for workspace
+let _pinchDist = 0;
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        _pinchDist = Math.hypot(
+            e.touches[1].clientX - e.touches[0].clientX,
+            e.touches[1].clientY - e.touches[0].clientY
+        );
+    }
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 2 || _pinchDist === 0) return;
+    const newDist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+    );
+    const factor = newDist / _pinchDist;
+    _pinchDist = newDist;
+    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    const ws = document.getElementById('workspace');
+    const rect = ws.getBoundingClientRect();
+    const lx = (midX - rect.left) / workspaceScale;
+    const ly = (midY - rect.top)  / workspaceScale;
+    const newScale = Math.max(0.05, Math.min(10, workspaceScale * factor));
+    workspacePanX += lx * (workspaceScale - newScale);
+    workspacePanY += ly * (workspaceScale - newScale);
+    workspaceScale = newScale;
+    _applyWorkspaceTransform();
+    e.preventDefault();
+}, { passive: false });
+document.addEventListener('touchend', () => { _pinchDist = 0; });
 
 // Custom Material panel event listeners
 document.getElementById('cm_btn-randomize').addEventListener('click', randomizeCMSeed);
@@ -1970,6 +3677,45 @@ canvasEl.addEventListener('touchend', () => {
     isResizingMineral = false;
     isRotatingMineral = false;
 });
+
+// ── Help Modal ────────────────────────────────────────────────────────────────
+const HELP_SEEN_KEY = 'perlynx_help_seen';
+function showHelp() {
+    document.getElementById('help-backdrop').classList.add('visible');
+}
+function closeHelp() {
+    document.getElementById('help-backdrop').classList.remove('visible');
+    localStorage.setItem(HELP_SEEN_KEY, '1');
+}
+document.getElementById('btn-help-close').addEventListener('click', closeHelp);
+document.getElementById('btn-help-close-bottom').addEventListener('click', closeHelp);
+document.getElementById('btn-download-genjs').addEventListener('click', () => {
+    fetch('perlynx.js')
+        .then(r => r.blob())
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'perlynx.js'; a.click();
+            URL.revokeObjectURL(url);
+        })
+        .catch(() => alert('Could not load perlynx.js.\n\nMake sure it is in the same folder as index.html.\nNote: file:// URLs block fetch — open via a local server (e.g. VS Code Live Server) to use this feature.'));
+});
+document.getElementById('btn-help-trigger').addEventListener('click', showHelp);
+// Close on backdrop click (outside modal)
+document.getElementById('help-backdrop').addEventListener('click', function(e) {
+    if (e.target === this) closeHelp();
+});
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('help-backdrop').classList.contains('visible')) {
+        closeHelp();
+    }
+});
+// Show automatically on first visit
+if (!localStorage.getItem(HELP_SEEN_KEY)) {
+    // Slight delay so the page renders first
+    setTimeout(showHelp, 600);
+}
 
 </script>
 </body>
