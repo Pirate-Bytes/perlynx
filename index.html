@@ -92,6 +92,46 @@
         .spawned-tile:hover .tile-close,
         .spawned-tile.touch-active .tile-close { opacity: 1; }
 
+        /* ── Props Apply Modal ────────────────────────────────────── */
+        #props-apply-backdrop {
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(0,0,0,0.72);
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px; box-sizing: border-box;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.18s;
+        }
+        #props-apply-backdrop.visible { opacity: 1; pointer-events: all; }
+        #props-apply-modal {
+            background: #1e1e1e; color: #e8e8e8;
+            border-radius: 14px; max-width: 420px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            transform: translateY(16px);
+            transition: transform 0.18s;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+        #props-apply-backdrop.visible #props-apply-modal { transform: translateY(0); }
+        #props-apply-modal .pam-header {
+            background: #161616; padding: 16px 20px 12px;
+            border-bottom: 1px solid #333;
+            font-size: 14px; font-weight: 700;
+        }
+        #props-apply-modal .pam-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+        #props-apply-modal .pam-option {
+            background: #2a2a2a; border: 1px solid #444; border-radius: 8px;
+            padding: 10px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+            text-align: left;
+        }
+        #props-apply-modal .pam-option:hover { background: #333; border-color: #888; }
+        #props-apply-modal .pam-option strong { display: block; font-size: 12px; color: #fff; margin-bottom: 3px; }
+        #props-apply-modal .pam-option span { font-size: 11px; color: #999; line-height: 1.4; }
+        #props-apply-modal .pam-cancel {
+            margin: 0 20px 16px; padding: 7px; border-radius: 7px;
+            border: 1px solid #444; background: transparent; color: #888;
+            cursor: pointer; font-size: 12px; transition: background 0.15s;
+        }
+        #props-apply-modal .pam-cancel:hover { background: #2a2a2a; color: #ccc; }
         /* ── Help Modal ───────────────────────────────────────────── */
         #help-backdrop {
             position: fixed; inset: 0; z-index: 99998;
@@ -549,6 +589,28 @@ mineralScatterSeed 0                 seed offset for placement</div>
         </div><!-- /modal -->
     </div><!-- /backdrop -->
 
+    <!-- ── Props Apply Modal ───────────────────────────────────── -->
+    <div id="props-apply-backdrop">
+        <div id="props-apply-modal" role="dialog" aria-modal="true">
+            <div class="pam-header">Apply properties to all tiles</div>
+            <div class="pam-body">
+                <button class="pam-option" id="pam-opt-replace-all">
+                    <strong>Replace keys &amp; values</strong>
+                    <span>All tiles will get exactly the same properties as the current tile, overwriting everything.</span>
+                </button>
+                <button class="pam-option" id="pam-opt-replace-keys">
+                    <strong>Replace keys</strong>
+                    <span>All tiles will have the same keys as the current tile. Existing values for matching keys are kept; new keys get empty/default values.</span>
+                </button>
+                <button class="pam-option" id="pam-opt-export-keys">
+                    <strong>Export keys</strong>
+                    <span>Merges the current tile's properties into every other tile. Unique properties on other tiles are kept, and existing values for matching keys are not overwritten.</span>
+                </button>
+            </div>
+            <button class="pam-cancel" id="pam-cancel">Cancel</button>
+        </div>
+    </div>
+
     <div class="controls">
         <div id="main-header" style="display: flex; align-items: center; gap: 4px; justify-content: center; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
             <h1 style="margin: 0;">Perlynx</h1>
@@ -830,18 +892,19 @@ mineralScatterSeed 0                 seed offset for placement</div>
             </div>
             <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
                 <input type="checkbox" id="props-apply-all" checked style="margin:0; vertical-align:middle;">
-                <label for="props-apply-all" style="font-size:11px; cursor:pointer; margin:0;">Apply to all tiles</label>
+                <label for="props-apply-all" style="font-size:11px; cursor:pointer; margin:0;">Apply to new tiles</label>
+                <button id="btn-props-apply-all" title="Apply current tile's properties to all tiles" style="margin-left:auto; font-size:10px; padding:2px 7px; border-radius:4px; border:1px solid #666; background:#444; color:#ddd; cursor:pointer;">Apply to all</button>
             </div>
             <hr style="border:none; border-top:1px solid #555; margin:8px 0;">
             <div style="font-size:11px; color:#aaa; margin-bottom:4px;">Image export options</div>
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                <input type="checkbox" id="export-preview-enabled" style="margin:0; flex-shrink:0;">
+                <input type="checkbox" id="export-preview-enabled" style="margin:0; flex-shrink:0;" checked>
                 <label for="export-preview-enabled" style="font-size:11px; cursor:pointer; white-space:nowrap;">Thumbnail <span id="export-preview-res" style="color:#888;">(48×48)</span></label>
                 <input type="text" id="export-preview-key" value="thumbnail" placeholder="key name"
                     style="flex:1; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px; display:none;">
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
-                <input type="checkbox" id="export-image-enabled" style="margin:0; flex-shrink:0;">
+                <input type="checkbox" id="export-image-enabled" style="margin:0; flex-shrink:0;" checked>
                 <label for="export-image-enabled" style="font-size:11px; cursor:pointer; white-space:nowrap;">Full image</label>
                 <input type="text" id="export-image-key" value="texture" placeholder="key name"
                     style="flex:1; min-width:0; font-size:11px; padding:2px 4px; border:1px solid #bbb; border-radius:3px; display:none;">
@@ -1470,9 +1533,9 @@ const ME = {
 // Each entry: { key: string, type: 'bool'|'int'|'float'|'string', value: any }
 let tileProperties = [];
 let propsApplyToAll = true;
-let exportPreviewEnabled = false;
+let exportPreviewEnabled = true;
 let exportPreviewKey = 'thumbnail';
-let exportImageEnabled = false;
+let exportImageEnabled = true;
 let exportImageKey = 'texture';
 
 function _propDefaultValue(type) {
@@ -1574,9 +1637,87 @@ function _syncPropsToAllTiles() {
     carouselTiles.forEach(tile => { tile.properties = snap.map(p => Object.assign({}, p)); });
 }
 
+function _showPropsApplyModal() {
+    // Flush current tile to carousel before snapshotting
+    if (carouselTiles[carouselCurrentIndex]) {
+        carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
+    }
+
+    const backdrop = document.getElementById('props-apply-backdrop');
+    backdrop.classList.add('visible');
+
+    const optReplaceAll  = document.getElementById('pam-opt-replace-all');
+    const optReplaceKeys = document.getElementById('pam-opt-replace-keys');
+    const optExportKeys  = document.getElementById('pam-opt-export-keys');
+    const btnCancel      = document.getElementById('pam-cancel');
+
+    function close() {
+        backdrop.classList.remove('visible');
+        backdrop.removeEventListener('click', onBackdrop);
+        optReplaceAll.removeEventListener('click', onReplaceAll);
+        optReplaceKeys.removeEventListener('click', onReplaceKeys);
+        optExportKeys.removeEventListener('click', onExportKeys);
+        btnCancel.removeEventListener('click', onCancel);
+    }
+
+    function onBackdrop(e) { if (e.target === backdrop) close(); }
+
+    function onReplaceAll() {
+        // Replace keys and values: exact copy of current tile's properties to all tiles
+        const snap = getPropsSnapshot();
+        carouselTiles.forEach(tile => {
+            tile.properties = snap.map(p => Object.assign({}, p));
+            if (tile.state) tile.state.properties = snap.map(p => Object.assign({}, p));
+        });
+        close();
+    }
+
+    function onReplaceKeys() {
+        // Replace keys: all tiles get same keys but keep existing values for matching keys
+        const snap = getPropsSnapshot();
+        carouselTiles.forEach(tile => {
+            const existing = tile.properties || [];
+            const newProps = snap.map(p => {
+                const match = existing.find(e => e.key === p.key);
+                const hasValue = match && match.value !== undefined && match.value !== '' && match.value !== false && match.value !== 0;
+                return { key: p.key, type: p.type, value: hasValue ? match.value : _propDefaultValue(p.type) };
+            });
+            tile.properties = newProps;
+            if (tile.state) tile.state.properties = newProps.map(p => Object.assign({}, p));
+        });
+        close();
+    }
+
+    function onExportKeys() {
+        // Export keys: merge current tile's props into all tiles, keeping unique props and existing values
+        const snap = getPropsSnapshot();
+        carouselTiles.forEach(tile => {
+            const existing = tile.properties || [];
+            const merged = existing.map(p => Object.assign({}, p));
+            snap.forEach(p => {
+                if (!merged.find(e => e.key === p.key)) {
+                    merged.push(Object.assign({}, p));
+                }
+            });
+            tile.properties = merged;
+            if (tile.state) tile.state.properties = merged.map(p => Object.assign({}, p));
+        });
+        close();
+    }
+
+    function onCancel() { close(); }
+
+    backdrop.addEventListener('click', onBackdrop);
+    optReplaceAll.addEventListener('click', onReplaceAll);
+    optReplaceKeys.addEventListener('click', onReplaceKeys);
+    optExportKeys.addEventListener('click', onExportKeys);
+    btnCancel.addEventListener('click', onCancel);
+}
+
 // --- Carousel State ---
 let carouselTiles = [];
 let carouselCurrentIndex = 0;
+let _carouselDragSrc = null;
 let workspaceScale = 1;
 let workspacePanX = 0;
 let workspacePanY = 0;
@@ -1631,6 +1772,53 @@ function renderCarousel() {
         div.title = 'Click to load tile';
         div.style.position = 'relative';
         div.setAttribute('data-index', idx);
+        div.draggable = true;
+        div.addEventListener('dragstart', e => {
+            _carouselDragSrc = idx;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => { div.style.opacity = '0.3'; }, 0);
+        });
+        div.addEventListener('dragend', () => {
+            _carouselDragSrc = null;
+            carouselListEl().querySelectorAll('[data-index]').forEach(el => {
+                const i = parseInt(el.getAttribute('data-index'));
+                el.style.opacity = i === carouselCurrentIndex ? '1' : '0.7';
+                el.style.outline = '';
+            });
+        });
+        div.addEventListener('dragover', e => {
+            if (_carouselDragSrc === null || _carouselDragSrc === idx) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            div.style.outline = `2px dashed ${menuBorder}`;
+        });
+        div.addEventListener('dragleave', () => {
+            div.style.outline = '';
+        });
+        div.addEventListener('drop', e => {
+            e.preventDefault();
+            div.style.outline = '';
+            if (_carouselDragSrc === null || _carouselDragSrc === idx) return;
+            const src = _carouselDragSrc;
+            _carouselDragSrc = null;
+            // Save current tile before reordering
+            if (carouselTiles[carouselCurrentIndex]) {
+                carouselTiles[carouselCurrentIndex].state = getAllState();
+                carouselTiles[carouselCurrentIndex].preview = getTilePreviewDataURL();
+                carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
+            }
+            const moved = carouselTiles.splice(src, 1)[0];
+            carouselTiles.splice(idx, 0, moved);
+            // Keep carouselCurrentIndex tracking the same tile
+            if (carouselCurrentIndex === src) {
+                carouselCurrentIndex = idx;
+            } else if (src < carouselCurrentIndex && idx >= carouselCurrentIndex) {
+                carouselCurrentIndex--;
+            } else if (src > carouselCurrentIndex && idx <= carouselCurrentIndex) {
+                carouselCurrentIndex++;
+            }
+            renderCarousel();
+        });
         const img = document.createElement('img');
         img.src = tile.preview;
         img.width = 44;
@@ -1658,6 +1846,8 @@ function renderCarousel() {
     });
     // Use event delegation for robust click handling
     list.onclick = function(e) {
+        // Ignore clicks that were actually drag releases
+        if (_carouselDragSrc !== null) return;
         // Remove button takes priority
         const removeEl = e.target.closest('[data-remove]');
         if (removeEl) { removeTile(parseInt(removeEl.getAttribute('data-remove'))); return; }
@@ -1678,7 +1868,7 @@ function renderCarousel() {
                     carouselTiles[carouselCurrentIndex].properties = getPropsSnapshot();
                 }
                 carouselCurrentIndex = idx;
-                if (!propsApplyToAll) setPropsSnapshot(carouselTiles[idx].properties || []);
+                setPropsSnapshot(carouselTiles[idx].properties || []);
                 setAllState(carouselTiles[idx].state);
                 renderCarousel();
             }
@@ -1839,7 +2029,7 @@ function removeTile(idx) {
     if (carouselCurrentIndex >= carouselTiles.length) {
         carouselCurrentIndex = carouselTiles.length - 1;
     }
-    if (!propsApplyToAll) setPropsSnapshot(carouselTiles[carouselCurrentIndex].properties || []);
+    setPropsSnapshot(carouselTiles[carouselCurrentIndex].properties || []);
     setAllState(carouselTiles[carouselCurrentIndex].state);
     renderCarousel();
 }
@@ -3216,6 +3406,8 @@ document.getElementById('btn-prop-add-bool').addEventListener('click', () => add
 document.getElementById('btn-prop-add-int').addEventListener('click', () => addProp('int'));
 document.getElementById('btn-prop-add-float').addEventListener('click', () => addProp('float'));
 document.getElementById('btn-prop-add-string').addEventListener('click', () => addProp('string'));
+
+document.getElementById('btn-props-apply-all').addEventListener('click', _showPropsApplyModal);
 
 document.getElementById('props-apply-all').addEventListener('change', function() {
     if (this.checked) {
